@@ -16,10 +16,7 @@ use RuntimeException;
 use t0mmy742\TokenAPI\Exception\AccessDeniedException;
 use t0mmy742\TokenAPI\Repository\AccessTokenRepositoryInterface;
 
-use function preg_replace;
-use function trim;
-
-class TokenValidator implements TokenValidatorInterface
+abstract class AbstractTokenValidator implements TokenValidatorInterface
 {
     private AccessTokenRepositoryInterface $accessTokenRepository;
     private Configuration $jwtConfiguration;
@@ -30,21 +27,9 @@ class TokenValidator implements TokenValidatorInterface
         $this->jwtConfiguration = $jwtConfiguration;
     }
 
-    /**
-     * Validate the access token in the authorization header and append properties to the request's attributes.
-     *
-     * @param ServerRequestInterface $request
-     * @return ServerRequestInterface
-     * @throws AccessDeniedException
-     */
     public function validateToken(ServerRequestInterface $request): ServerRequestInterface
     {
-        if ($request->hasHeader('authorization') === false) {
-            throw new AccessDeniedException('Missing "Authorization" header');
-        }
-
-        $header = $request->getHeader('Authorization');
-        $jwt = trim((string) preg_replace('/^(?:\s+)?Bearer\s/', '', $header[0]));
+        $jwt = $this->retrieveToken($request);
 
         try {
             $token = $this->jwtConfiguration->getParser()->parse($jwt);
@@ -83,4 +68,6 @@ class TokenValidator implements TokenValidatorInterface
             ->withAttribute('access_token_id', $token->claims()->get('jti'))
             ->withAttribute('user_id', $token->claims()->get('sub'));
     }
+
+    abstract protected function retrieveToken(ServerRequestInterface $request): string;
 }

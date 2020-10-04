@@ -4,21 +4,17 @@ declare(strict_types=1);
 
 namespace t0mmy742\TokenAPI;
 
-use Lcobucci\JWT\Configuration;
 use Psr\Http\Message\ServerRequestInterface;
-use t0mmy742\TokenAPI\Exception\AccessDeniedException;
-use t0mmy742\TokenAPI\Repository\AccessTokenRepositoryInterface;
-use t0mmy742\TokenAPI\TokenValidator\TokenValidator;
+use t0mmy742\TokenAPI\Exception\TokenApiException;
+use t0mmy742\TokenAPI\TokenValidator\TokenValidatorInterface;
 
 class ResourceServer
 {
-    private AccessTokenRepositoryInterface $accessTokenRepository;
-    private Configuration $jwtConfiguration;
+    private TokenValidatorInterface $tokenValidator;
 
-    public function __construct(AccessTokenRepositoryInterface $accessTokenRepository, Configuration $jwtConfiguration)
+    public function __construct(TokenValidatorInterface $tokenValidator)
     {
-        $this->accessTokenRepository = $accessTokenRepository;
-        $this->jwtConfiguration = $jwtConfiguration;
+        $this->tokenValidator = $tokenValidator;
     }
 
     /**
@@ -26,10 +22,10 @@ class ResourceServer
      *
      * @param ServerRequestInterface $request
      * @return ServerRequestInterface
-     * @throws AccessDeniedException
+     * @throws TokenApiException
      */
     public function validateAuthenticatedRequest(ServerRequestInterface $request): ServerRequestInterface
     {
-        return (new TokenValidator($this->accessTokenRepository, $this->jwtConfiguration))->validateToken($request);
+        return $this->tokenValidator->validateToken($request);
     }
 }

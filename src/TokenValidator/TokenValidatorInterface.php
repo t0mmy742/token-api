@@ -5,14 +5,16 @@ declare(strict_types=1);
 namespace t0mmy742\TokenAPI\TokenValidator;
 
 use Psr\Http\Message\ServerRequestInterface;
+use t0mmy742\TokenAPI\Exception\AccessDeniedException;
 
 interface TokenValidatorInterface
 {
     /**
-     * Validate the access token in the authorization header and append properties to the request's attributes.
+     * Validate the access token and append properties to the request's attributes.
      *
      * @param ServerRequestInterface $request
      * @return ServerRequestInterface
+     * @throws AccessDeniedException
      */
     public function validateToken(ServerRequestInterface $request): ServerRequestInterface;
 }
