@@ -1,0 +1,21 @@
+language: php
+
+os: linux
+
+php:
+  - 7.4
+
+install:
+  - composer install -n
+  - composer require --dev php-coveralls/php-coveralls:^2.3 -n
+
+script:
+  - vendor/bin/phpunit --coverage-text --coverage-clover build/logs/clover.xml
+  - vendor/bin/phpcs
+  - vendor/bin/phpstan analyse src
+
+after_success:
+  - travis_retry php vendor/bin/php-coveralls -v
+
+notifications:
+  webhooks: https://coveralls.io/webhook

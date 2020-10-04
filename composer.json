@@ -1,0 +1,53 @@
+{
+    "name": "t0mmy742/token-api",
+    "description": "Secure API with access tokens (and optionally refresh tokens)",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Thomas LE BERRE",
+            "email": "29512640+t0mmy742@users.noreply.github.com"
+        }
+    ],
+    "require": {
+        "php": "^7.4",
+        "ext-json": "*",
+        "defuse/php-encryption": "^2.2",
+        "lcobucci/jwt": "4.0.*@alpha",
+        "psr/http-factory": "^1.0",
+        "psr/http-message": "^1.0",
+        "psr/http-server-handler": "^1.0",
+        "psr/http-server-middleware": "^1.0"
+    },
+    "require-dev": {
+        "phpspec/prophecy": "^1.12",
+        "phpspec/prophecy-phpunit": "^2.0",
+        "phpstan/phpstan": "^0.12.48",
+        "phpunit/phpunit": "^9.4",
+        "squizlabs/php_codesniffer": "^3.5",
+        "t0mmy742/middleware-dispatcher": "^1.0"
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "autoload": {
+        "psr-4": {
+            "t0mmy742\\TokenAPI\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "t0mmy742\\TokenAPI\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": [
+            "@phpcs",
+            "@phpstan",
+            "@phpunit"
+        ],
+        "phpcs": "phpcs",
+        "phpstan": "phpstan analyse src --memory-limit=-1",
+        "phpunit": "phpunit"
+    }
+}
