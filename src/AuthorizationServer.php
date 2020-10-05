@@ -54,14 +54,34 @@ class AuthorizationServer
     }
 
     /**
-     * Respond to access token request, and return a response if both an access token and a refresh token.
+     * Respond to token request, and return a response with both an access token and a refresh token.
      *
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
      * @return ResponseInterface
      * @throws TokenApiException
      */
-    public function respondToAccessTokenRequest(
+    public function respondToTokenRequest(
+        ServerRequestInterface $request,
+        ResponseInterface $response
+    ): ResponseInterface {
+        $requestParameters = (array) $request->getParsedBody();
+        if (isset($requestParameters['refresh_token'])) {
+            return $this->respondToRefreshTokenRequest($request, $response);
+        } else {
+            return $this->respondToAccessTokenRequest($request, $response);
+        }
+    }
+
+    /**
+     * Respond to access token request, and return a response with both an access token and a refresh token.
+     *
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
+     * @return ResponseInterface
+     * @throws TokenApiException
+     */
+    private function respondToAccessTokenRequest(
         ServerRequestInterface $request,
         ResponseInterface $response
     ): ResponseInterface {
@@ -79,14 +99,14 @@ class AuthorizationServer
     }
 
     /**
-     * Respond to refresh token request, and return a response if both an access token and a refresh token.
+     * Respond to refresh token request, and return a response with both an access token and a refresh token.
      *
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
      * @return ResponseInterface
      * @throws TokenApiException
      */
-    public function respondToRefreshTokenRequest(
+    private function respondToRefreshTokenRequest(
         ServerRequestInterface $request,
         ResponseInterface $response
     ): ResponseInterface {

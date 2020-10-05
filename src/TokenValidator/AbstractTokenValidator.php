@@ -41,7 +41,7 @@ abstract class AbstractTokenValidator implements TokenValidatorInterface
             if (
                 $this->jwtConfiguration->getValidator()->validate($token, new SignedWith(
                     $this->jwtConfiguration->getSigner(),
-                    $this->jwtConfiguration->getSigningKey()
+                    $this->jwtConfiguration->getVerificationKey()
                 )) === false
             ) {
                 throw new AccessDeniedException('Access token could not be verified');

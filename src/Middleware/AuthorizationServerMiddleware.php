@@ -28,7 +28,7 @@ class AuthorizationServerMiddleware implements MiddlewareInterface
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         try {
-            return $this->authorizationServer->respondToAccessTokenRequest($request, $handler->handle($request));
+            return $this->authorizationServer->respondToTokenRequest($request, $handler->handle($request));
         } catch (TokenApiException $e) {
             $responseBody = json_encode(['error' => $e->getMessage()]) ?: 'JSON encoding failed';
 
