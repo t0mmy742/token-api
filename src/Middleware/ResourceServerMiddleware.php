@@ -28,7 +28,7 @@ class ResourceServerMiddleware implements MiddlewareInterface
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         try {
-            $this->resourceServer->validateAuthenticatedRequest($request);
+            $request = $this->resourceServer->validateAuthenticatedRequest($request);
         } catch (TokenApiException $e) {
             $responseBody = json_encode(['error' => $e->getMessage()]) ?: 'JSON encoding failed';
 
