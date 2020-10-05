@@ -4,6 +4,7 @@
          name="Token API library">
     <description>Token API library coding standard</description>
 
+    <file>examples</file>
     <file>src</file>
     <file>tests</file>
 

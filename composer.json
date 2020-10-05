@@ -13,7 +13,7 @@
         "php": "^7.4",
         "ext-json": "*",
         "defuse/php-encryption": "^2.2",
-        "lcobucci/jwt": "4.0.*@alpha",
+        "lcobucci/jwt": "4.0.0-alpha3",
         "psr/http-factory": "^1.0",
         "psr/http-message": "^1.0",
         "psr/http-server-handler": "^1.0",

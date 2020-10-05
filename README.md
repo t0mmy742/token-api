@@ -19,4 +19,4 @@ $ composer require t0mmy742/token-api
 
 ## Usage
 
-TODO
+See [README.md](https://github.com/t0mmy742/token-api/blob/master/examples/README.md) file in `examples` directory.
