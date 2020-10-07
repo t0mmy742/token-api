@@ -17,6 +17,8 @@ use RuntimeException;
 use t0mmy742\TokenAPI\Exception\AccessDeniedException;
 use t0mmy742\TokenAPI\Repository\AccessTokenRepositoryInterface;
 
+use function time;
+
 abstract class AbstractTokenValidator implements TokenValidatorInterface
 {
     private AccessTokenRepositoryInterface $accessTokenRepository;
@@ -50,7 +52,7 @@ abstract class AbstractTokenValidator implements TokenValidatorInterface
 
             if (
                 $this->jwtConfiguration->getValidator()->validate($token, new ValidAt(
-                    new FrozenClock(new DateTimeImmutable())
+                    new FrozenClock(new DateTimeImmutable('@' . time()))
                 )) === false
             ) {
                 throw new AccessDeniedException('Access token is invalid');

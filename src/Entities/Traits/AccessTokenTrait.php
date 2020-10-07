@@ -8,6 +8,8 @@ use DateTimeImmutable;
 use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Token;
 
+use function time;
+
 trait AccessTokenTrait
 {
     private DateTimeImmutable $expiryDateTime;
@@ -93,8 +95,8 @@ trait AccessTokenTrait
         return $this->jwtConfiguration
             ->createBuilder()
             ->identifiedBy($this->getIdentifier())
-            ->issuedAt(new DateTimeImmutable())
-            ->canOnlyBeUsedAfter(new DateTimeImmutable())
+            ->issuedAt(new DateTimeImmutable('@' . time()))
+            ->canOnlyBeUsedAfter(new DateTimeImmutable('@' . time()))
             ->expiresAt($this->getExpiryDateTime())
             ->relatedTo((string) $this->getUserIdentifier())
             ->getToken($this->jwtConfiguration->getSigner(), $this->jwtConfiguration->getSigningKey());

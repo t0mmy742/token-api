@@ -24,6 +24,7 @@ use t0mmy742\TokenAPI\Repository\UserRepositoryInterface;
 use function bin2hex;
 use function json_encode;
 use function random_bytes;
+use function time;
 
 abstract class AbstractTokenGeneration implements TokenGenerationInterface
 {
@@ -70,7 +71,7 @@ abstract class AbstractTokenGeneration implements TokenGenerationInterface
     protected function issueAccessToken(DateInterval $accessTokenTTL, $userIdentifier): AccessTokenEntityInterface
     {
         $accessToken = $this->accessTokenRepository->getNewToken($userIdentifier);
-        $accessToken->setExpiryDateTime((new DateTimeImmutable())->add($accessTokenTTL));
+        $accessToken->setExpiryDateTime((new DateTimeImmutable('@' . time()))->add($accessTokenTTL));
         $accessToken->setJwtConfiguration($this->jwtConfiguration);
 
         $tokenGenerationAttempts = 0;
@@ -110,7 +111,7 @@ abstract class AbstractTokenGeneration implements TokenGenerationInterface
             return null;
         }
 
-        $refreshToken->setExpiryDateTime((new DateTimeImmutable())->add($this->refreshTokenTTL));
+        $refreshToken->setExpiryDateTime((new DateTimeImmutable('@' . time()))->add($this->refreshTokenTTL));
         $refreshToken->setAccessToken($accessToken);
 
         $tokenGenerationAttempts = 0;
