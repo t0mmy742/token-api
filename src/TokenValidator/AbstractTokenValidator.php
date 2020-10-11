@@ -36,31 +36,31 @@ abstract class AbstractTokenValidator implements TokenValidatorInterface
 
         try {
             $token = $this->jwtConfiguration->getParser()->parse($jwt);
-
-            if ($token instanceof Plain === false) {
-                throw new AccessDeniedException('Error while parsing access token');
-            }
-
-            if (
-                $this->jwtConfiguration->getValidator()->validate($token, new SignedWith(
-                    $this->jwtConfiguration->getSigner(),
-                    $this->jwtConfiguration->getVerificationKey()
-                )) === false
-            ) {
-                throw new AccessDeniedException('Access token could not be verified');
-            }
-
-            if (
-                $this->jwtConfiguration->getValidator()->validate($token, new ValidAt(
-                    new FrozenClock(new DateTimeImmutable('@' . time()))
-                )) === false
-            ) {
-                throw new AccessDeniedException('Access token is invalid');
-            }
         } catch (InvalidArgumentException $e) {
             throw new AccessDeniedException($e->getMessage());
         } catch (RuntimeException $e) {
-            throw new AccessDeniedException('Error while decoding to JSON');
+            throw new AccessDeniedException('Error while decoding from JSON');
+        }
+
+        if ($token instanceof Plain === false) {
+            throw new AccessDeniedException('Error while parsing access token');
+        }
+
+        if (
+            $this->jwtConfiguration->getValidator()->validate($token, new SignedWith(
+                $this->jwtConfiguration->getSigner(),
+                $this->jwtConfiguration->getVerificationKey()
+            )) === false
+        ) {
+            throw new AccessDeniedException('Access token could not be verified');
+        }
+
+        if (
+            $this->jwtConfiguration->getValidator()->validate($token, new ValidAt(
+                new FrozenClock(new DateTimeImmutable('@' . time()))
+            )) === false
+        ) {
+            throw new AccessDeniedException('Access token is invalid');
         }
 
         if ($this->accessTokenRepository->isAccessTokenRevoked($token->claims()->get(RegisteredClaims::ID))) {

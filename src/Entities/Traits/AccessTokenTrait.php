@@ -13,8 +13,7 @@ use function time;
 trait AccessTokenTrait
 {
     private DateTimeImmutable $expiryDateTime;
-    /** @var string|int|null */
-    private $userIdentifier;
+    private string $userIdentifier;
     private Configuration $jwtConfiguration;
 
     /**

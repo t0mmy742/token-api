@@ -158,7 +158,7 @@ abstract class AbstractTokenGeneration implements TokenGenerationInterface
      * @throws EncryptionException
      * @throws JsonEncodingException
      */
-    public function generateHttpResponse(
+    protected function generateHttpResponse(
         ResponseInterface $response,
         AccessTokenEntityInterface $accessToken,
         ?RefreshTokenEntityInterface $refreshToken
@@ -176,7 +176,7 @@ abstract class AbstractTokenGeneration implements TokenGenerationInterface
                 'refresh_token_id' => $refreshToken->getIdentifier(),
                 'access_token_id'  => $accessToken->getIdentifier(),
                 'user_id'          => $accessToken->getUserIdentifier(),
-                'expire_time'      => $refreshToken->getExpiryDateTime()->getTimestamp(),
+                'expire_time'      => $refreshToken->getExpiryDateTime()->getTimestamp()
             ]);
 
             if ($refreshTokenPayload === false) {

@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace t0mmy742\TokenAPI\Tests\Middleware;
 
-use PHPUnit\Framework\TestCase;
-use Prophecy\PhpUnit\ProphecyTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
@@ -14,13 +12,12 @@ use Slim\Psr7\Factory\ServerRequestFactory;
 use t0mmy742\TokenAPI\Exception\TokenApiException;
 use t0mmy742\TokenAPI\Middleware\ResourceServerMiddleware;
 use t0mmy742\TokenAPI\ResourceServer;
+use t0mmy742\TokenAPI\Tests\TestCase;
 
 use function json_encode;
 
 class ResourceServerMiddlewareTest extends TestCase
 {
-    use ProphecyTrait;
-
     public function testValidToken(): void
     {
         $serverRequest = (new ServerRequestFactory())->createServerRequest('GET', '/test');

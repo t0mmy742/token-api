@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace t0mmy742\TokenAPI\Tests\Middleware;
 
-use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
-use Prophecy\PhpUnit\ProphecyTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
@@ -15,14 +13,12 @@ use Slim\Psr7\Factory\ServerRequestFactory;
 use t0mmy742\TokenAPI\AuthorizationServer;
 use t0mmy742\TokenAPI\Exception\TokenApiException;
 use t0mmy742\TokenAPI\Middleware\AuthorizationServerMiddleware;
-use t0mmy742\TokenAPI\Middleware\ResourceServerMiddleware;
-use t0mmy742\TokenAPI\ResourceServer;
+use t0mmy742\TokenAPI\Tests\TestCase;
 
 use function json_encode;
 
 class AuthorizationServerMiddlewareTest extends TestCase
 {
-    use ProphecyTrait;
 
     public function testReturnToken(): void
     {
