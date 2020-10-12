@@ -6,6 +6,7 @@ namespace t0mmy742\TokenAPI\TokenGeneration;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use t0mmy742\TokenAPI\Exception\TokenApiException;
 
 interface TokenGenerationInterface
 {
@@ -17,6 +18,7 @@ interface TokenGenerationInterface
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
      * @return ResponseInterface
+     * @throws TokenApiException
      */
     public function respondToTokenRequest(
         ServerRequestInterface $request,

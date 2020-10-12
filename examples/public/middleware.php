@@ -14,6 +14,7 @@ use t0mmy742\TokenAPI\AuthorizationServer;
 use t0mmy742\TokenAPI\Middleware\AuthorizationServerMiddleware;
 use t0mmy742\TokenAPI\Middleware\ResourceServerMiddleware;
 use t0mmy742\TokenAPI\ResourceServer;
+use t0mmy742\TokenAPI\TokenGeneration\TokenGeneration;
 use t0mmy742\TokenAPIExamples\Repositories\AccessTokenRepository;
 use t0mmy742\TokenAPIExamples\Repositories\RefreshTokenRepository;
 use t0mmy742\TokenAPIExamples\Repositories\UserRepository;
@@ -23,20 +24,20 @@ include __DIR__ . '/../vendor/autoload.php';
 $container = new Container();
 
 $container->set(AuthorizationServer::class, function () {
-    return new AuthorizationServer(
+    return new AuthorizationServer(new TokenGeneration(
         new AccessTokenRepository(),
-        new UserRepository(),
         new RefreshTokenRepository(),
+        new UserRepository(),
+        new DateInterval('PT1H'),
+        new DateInterval('P1M'),
         Configuration::forAsymmetricSigner(
             new Sha256(),
             new Key('file://' . __DIR__ . '/../private.key'),
-            new Key('file://' . __DIR__ . '/../public.key)')
+            new Key('file://' . __DIR__ . '/../public.key')
         ),
         CryptoKey::loadFromAsciiSafeString('def000001bffc7df14056517020ebc56829102ec3411906b08fea9f99e4a2e5593bcb' .
-            'cf53b5016849b545ceba1e9f52157913832e6f3f2e89a3e402a66070cff9e2aaa60'),
-        new DateInterval('PT1H'),
-        new DateInterval('P1M')
-    );
+            'cf53b5016849b545ceba1e9f52157913832e6f3f2e89a3e402a66070cff9e2aaa60')
+    ));
 });
 
 // Instantiate App

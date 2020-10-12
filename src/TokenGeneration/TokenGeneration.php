@@ -10,10 +10,14 @@ use Defuse\Crypto\Key;
 use Exception;
 use Lcobucci\JWT\Configuration;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use t0mmy742\TokenAPI\CryptTrait;
 use t0mmy742\TokenAPI\Entities\AccessTokenEntityInterface;
 use t0mmy742\TokenAPI\Entities\RefreshTokenEntityInterface;
+use t0mmy742\TokenAPI\Entities\UserEntityInterface;
 use t0mmy742\TokenAPI\Exception\EncryptionException;
+use t0mmy742\TokenAPI\Exception\InvalidRefreshTokenException;
+use t0mmy742\TokenAPI\Exception\InvalidRequestException;
 use t0mmy742\TokenAPI\Exception\JsonEncodingException;
 use t0mmy742\TokenAPI\Exception\RandomGenerationException;
 use t0mmy742\TokenAPI\Exception\UniqueTokenIdentifierException;
@@ -22,39 +26,76 @@ use t0mmy742\TokenAPI\Repository\RefreshTokenRepositoryInterface;
 use t0mmy742\TokenAPI\Repository\UserRepositoryInterface;
 
 use function bin2hex;
+use function json_decode;
 use function json_encode;
 use function random_bytes;
 use function time;
 
-abstract class AbstractTokenGeneration implements TokenGenerationInterface
+class TokenGeneration implements TokenGenerationInterface
 {
     use CryptTrait;
 
     private const MAX_TOKEN_GENERATION_ATTEMPTS = 5;
 
-    protected AccessTokenRepositoryInterface $accessTokenRepository;
-    protected RefreshTokenRepositoryInterface $refreshTokenRepository;
-    protected UserRepositoryInterface $userRepository;
-    protected DateInterval $accessTokenTTL;
-    protected DateInterval $refreshTokenTTL;
-    protected Configuration $jwtConfiguration;
+    private AccessTokenRepositoryInterface $accessTokenRepository;
+    private RefreshTokenRepositoryInterface $refreshTokenRepository;
+    private UserRepositoryInterface $userRepository;
+    private DateInterval $accessTokenTTL;
+    private DateInterval $refreshTokenTTL;
+    private Configuration $jwtConfiguration;
 
     public function __construct(
-        UserRepositoryInterface $userRepository,
+        AccessTokenRepositoryInterface $accessTokenRepository,
         RefreshTokenRepositoryInterface $refreshTokenRepository,
+        UserRepositoryInterface $userRepository,
         DateInterval $accessTokenTTL,
         DateInterval $refreshTokenTTL,
-        AccessTokenRepositoryInterface $accessTokenRepository,
         Configuration $jwtConfiguration,
         Key $encryptionKey
     ) {
+        $this->accessTokenRepository = $accessTokenRepository;
         $this->userRepository = $userRepository;
         $this->refreshTokenRepository = $refreshTokenRepository;
         $this->accessTokenTTL = $accessTokenTTL;
         $this->refreshTokenTTL = $refreshTokenTTL;
-        $this->accessTokenRepository = $accessTokenRepository;
         $this->jwtConfiguration = $jwtConfiguration;
         $this->encryptionKey = $encryptionKey;
+    }
+
+    /**
+     * Respond to token generation request, validating the parameters of the request.
+     *
+     * If the generation is successful, a response will be returned.
+     *
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
+     * @return ResponseInterface
+     * @throws EncryptionException
+     * @throws InvalidRefreshTokenException
+     * @throws InvalidRequestException
+     * @throws JsonEncodingException
+     * @throws RandomGenerationException
+     * @throws UniqueTokenIdentifierException
+     */
+    public function respondToTokenRequest(
+        ServerRequestInterface $request,
+        ResponseInterface $response
+    ): ResponseInterface {
+        $requestParameters = (array) $request->getParsedBody();
+        if (!isset($requestParameters['refresh_token'])) {
+            $userId = $this->validateUser($request)->getIdentifier();
+        } else {
+            $oldRefreshToken = $this->validateOldRefreshToken($request);
+
+            $this->accessTokenRepository->revokeAccessToken($oldRefreshToken['access_token_id']);
+            $this->refreshTokenRepository->revokeRefreshToken($oldRefreshToken['refresh_token_id']);
+
+            $userId = $oldRefreshToken['user_id'];
+        }
+        $accessToken = $this->issueAccessToken($this->accessTokenTTL, $userId);
+        $refreshToken = $this->issueRefreshToken($accessToken);
+
+        return $this->generateHttpResponse($response, $accessToken, $refreshToken);
     }
 
     /**
@@ -68,7 +109,7 @@ abstract class AbstractTokenGeneration implements TokenGenerationInterface
      * @throws RandomGenerationException
      * @throws UniqueTokenIdentifierException
      */
-    protected function issueAccessToken(DateInterval $accessTokenTTL, $userIdentifier): AccessTokenEntityInterface
+    private function issueAccessToken(DateInterval $accessTokenTTL, $userIdentifier): AccessTokenEntityInterface
     {
         $accessToken = $this->accessTokenRepository->getNewToken($userIdentifier);
         $accessToken->setExpiryDateTime((new DateTimeImmutable('@' . time()))->add($accessTokenTTL));
@@ -103,7 +144,7 @@ abstract class AbstractTokenGeneration implements TokenGenerationInterface
      * @throws RandomGenerationException
      * @throws UniqueTokenIdentifierException
      */
-    protected function issueRefreshToken(AccessTokenEntityInterface $accessToken): ?RefreshTokenEntityInterface
+    private function issueRefreshToken(AccessTokenEntityInterface $accessToken): ?RefreshTokenEntityInterface
     {
         $refreshToken = $this->refreshTokenRepository->getNewRefreshToken();
 
@@ -158,7 +199,7 @@ abstract class AbstractTokenGeneration implements TokenGenerationInterface
      * @throws EncryptionException
      * @throws JsonEncodingException
      */
-    protected function generateHttpResponse(
+    private function generateHttpResponse(
         ResponseInterface $response,
         AccessTokenEntityInterface $accessToken,
         ?RefreshTokenEntityInterface $refreshToken
@@ -201,5 +242,70 @@ abstract class AbstractTokenGeneration implements TokenGenerationInterface
         $response->getBody()->write($responseParams);
 
         return $response;
+    }
+
+    /**
+     * Validate request parameters used for user identification.
+     *
+     * If the validation is successful, a UserEntity will be returned.
+     *
+     * @param ServerRequestInterface $request
+     * @return UserEntityInterface
+     * @throws InvalidRequestException
+     */
+    private function validateUser(ServerRequestInterface $request): UserEntityInterface
+    {
+        $requestParameters = (array) $request->getParsedBody();
+
+        $username = $requestParameters['username'] ?? null;
+        if ($username === null) {
+            throw new InvalidRequestException('username');
+        }
+
+        $password = $requestParameters['password'] ?? null;
+        if ($password === null) {
+            throw new InvalidRequestException('password');
+        }
+
+        $user = $this->userRepository->getUserEntityByUserCredentials($username, $password);
+        if ($user instanceof UserEntityInterface === false) {
+            throw new InvalidRequestException('Invalid identification');
+        }
+
+        return $user;
+    }
+
+    /**
+     * Validate refresh token contained in request parameters.
+     *
+     * If the validation is successful, an array will be returned with refresh token information.
+     *
+     * @param ServerRequestInterface $request
+     * @return array
+     * @throws InvalidRefreshTokenException
+     */
+    private function validateOldRefreshToken(ServerRequestInterface $request): array
+    {
+        $requestParameters = (array) $request->getParsedBody();
+
+        $encryptedRefreshToken = $requestParameters['refresh_token'];
+
+        try {
+            $refreshToken = $this->decrypt($encryptedRefreshToken);
+        } catch (EncryptionException $e) {
+            throw new InvalidRefreshTokenException('Cannot decrypt the refresh token', 0, $e);
+        }
+
+        $refreshTokenData = json_decode($refreshToken, true);
+
+        if ($refreshTokenData['expire_time'] < time()) {
+            throw new InvalidRefreshTokenException('Token has expired');
+        }
+
+        if ($this->refreshTokenRepository->isRefreshTokenRevoked($refreshTokenData['refresh_token_id']) === true) {
+            throw new InvalidRefreshTokenException('Token has been revoked');
+        }
+
+        return $refreshTokenData;
     }
 }
