@@ -21,6 +21,8 @@ use t0mmy742\TokenAPI\Entities\AccessTokenEntityInterface;
 use t0mmy742\TokenAPI\Entities\RefreshTokenEntityInterface;
 use t0mmy742\TokenAPI\Exception\InvalidRefreshTokenException;
 use t0mmy742\TokenAPI\Exception\InvalidRequestException;
+use t0mmy742\TokenAPI\Exception\JsonEncodingException;
+use t0mmy742\TokenAPI\Exception\RandomGenerationException;
 use t0mmy742\TokenAPI\Exception\UniqueTokenIdentifierException;
 use t0mmy742\TokenAPI\Repository\AccessTokenRepositoryInterface;
 use t0mmy742\TokenAPI\Repository\RefreshTokenRepositoryInterface;
@@ -168,6 +170,19 @@ class TokenGenerationTest extends TestCase
         $method->invoke($this->tokenGeneration, new AccessTokenEntity());
     }
 
+    public function testGenerateUniqueIdentifierException(): void
+    {
+        $class = new ReflectionClass($this->tokenGeneration);
+        $method = $class->getMethod('generateUniqueIdentifier');
+        $method->setAccessible(true);
+
+        $GLOBALS['random_bytes_exception'] = true;
+
+        $this->expectException(RandomGenerationException::class);
+        $this->expectExceptionMessage('Could not generate a random string');
+        $method->invoke($this->tokenGeneration);
+    }
+
     public function testGoodGenerateHttpResponse(): void
     {
         $class = new ReflectionClass($this->tokenGeneration);
@@ -185,6 +200,8 @@ class TokenGenerationTest extends TestCase
         $refreshToken->setAccessToken($accessToken);
         $refreshToken->setIdentifier('REFRESH_TOKEN_ID');
 
+        $this->assertSame($accessToken, $refreshToken->getAccessToken());
+
         /** @var ResponseInterface $responseResult */
         $responseResult = $method->invoke(
             $this->tokenGeneration,
@@ -194,6 +211,49 @@ class TokenGenerationTest extends TestCase
         );
 
         $this->assertSame(200, $responseResult->getStatusCode());
+    }
+
+    public function testJsonErrorRefreshTokenPayloadGenerateHttpResponse(): void
+    {
+        $class = new ReflectionClass($this->tokenGeneration);
+        $method = $class->getMethod('generateHttpResponse');
+        $method->setAccessible(true);
+
+        $accessToken = new AccessTokenEntity();
+        $accessToken->setUserIdentifier('USER_ID');
+        $accessToken->setExpiryDateTime((new DateTimeImmutable('@' . time()))->add(new DateInterval('PT1H')));
+        $accessToken->setJwtConfiguration($this->jwtConfiguration);
+        $accessToken->setIdentifier('ACCESS_TOKEN_ID');
+
+        $refreshToken = new RefreshTokenEntity();
+        $refreshToken->setExpiryDateTime((new DateTimeImmutable('@' . time()))->add(new DateInterval('P1M')));
+        $refreshToken->setAccessToken($accessToken);
+        $refreshToken->setIdentifier('REFRESH_TOKEN_ID');
+
+        $GLOBALS['json_encode_false'] = true;
+
+        $this->expectException(JsonEncodingException::class);
+        $this->expectExceptionMessage('Error while JSON encoding the refresh token payload');
+        $method->invoke($this->tokenGeneration, (new ResponseFactory())->createResponse(), $accessToken, $refreshToken);
+    }
+
+    public function testJsonErrorResponseParametersGenerateHttpResponse(): void
+    {
+        $class = new ReflectionClass($this->tokenGeneration);
+        $method = $class->getMethod('generateHttpResponse');
+        $method->setAccessible(true);
+
+        $accessToken = new AccessTokenEntity();
+        $accessToken->setUserIdentifier('USER_ID');
+        $accessToken->setExpiryDateTime((new DateTimeImmutable('@' . time()))->add(new DateInterval('PT1H')));
+        $accessToken->setJwtConfiguration($this->jwtConfiguration);
+        $accessToken->setIdentifier('ACCESS_TOKEN_ID');
+
+        $GLOBALS['json_encode_false'] = true;
+
+        $this->expectException(JsonEncodingException::class);
+        $this->expectExceptionMessage('Error while JSON encoding response parameters');
+        $method->invoke($this->tokenGeneration, (new ResponseFactory())->createResponse(), $accessToken, null);
     }
 
     public function testValidRespondToTokenRequest(): void

@@ -7,7 +7,7 @@ php:
 
 install:
   - composer install -n
-  - composer require --dev php-coveralls/php-coveralls:^2.3 -n
+  - composer require --dev php-coveralls/php-coveralls:^2.4 -n
 
 script:
   - vendor/bin/phpunit --coverage-text --coverage-clover build/logs/clover.xml

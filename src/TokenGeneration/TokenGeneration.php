@@ -108,6 +108,8 @@ class TokenGeneration implements TokenGenerationInterface
      * @return AccessTokenEntityInterface
      * @throws RandomGenerationException
      * @throws UniqueTokenIdentifierException
+     *
+     * @noinspection PhpInconsistentReturnPointsInspection
      */
     private function issueAccessToken(DateInterval $accessTokenTTL, $userIdentifier): AccessTokenEntityInterface
     {
@@ -130,9 +132,10 @@ class TokenGeneration implements TokenGenerationInterface
                 }
             }
         }
-        // Should not throw this exception
-        throw new UniqueTokenIdentifierException('Error while generating access token');
+        // @phpstan-ignore-next-line
+        // @codeCoverageIgnoreStart
     }
+    // @codeCoverageIgnoreEnd
 
     /**
      * Issue a new refresh token for a previous authorized access token.
@@ -143,6 +146,8 @@ class TokenGeneration implements TokenGenerationInterface
      * @return RefreshTokenEntityInterface|null
      * @throws RandomGenerationException
      * @throws UniqueTokenIdentifierException
+     *
+     * @noinspection PhpInconsistentReturnPointsInspection
      */
     private function issueRefreshToken(AccessTokenEntityInterface $accessToken): ?RefreshTokenEntityInterface
     {
@@ -170,9 +175,10 @@ class TokenGeneration implements TokenGenerationInterface
                 }
             }
         }
-        // Should not throw this exception
-        throw new UniqueTokenIdentifierException('Error while generating refresh token');
+        // @phpstan-ignore-next-line
+        // @codeCoverageIgnoreStart
     }
+    // @codeCoverageIgnoreEnd
 
     /**
      * Generate a unique identifier for access token.
