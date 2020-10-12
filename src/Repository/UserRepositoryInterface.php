@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace t0mmy742\TokenAPI\Repository;
+namespace T0mmy742\TokenAPI\Repository;
 
-use t0mmy742\TokenAPI\Entities\UserEntityInterface;
+use T0mmy742\TokenAPI\Entities\UserEntityInterface;
 
 interface UserRepositoryInterface
 {

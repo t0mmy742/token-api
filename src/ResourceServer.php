@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace t0mmy742\TokenAPI;
+namespace T0mmy742\TokenAPI;
 
 use Psr\Http\Message\ServerRequestInterface;
-use t0mmy742\TokenAPI\Exception\TokenApiException;
-use t0mmy742\TokenAPI\TokenValidator\TokenValidatorInterface;
+use T0mmy742\TokenAPI\Exception\TokenApiException;
+use T0mmy742\TokenAPI\TokenValidator\TokenValidatorInterface;
 
 class ResourceServer
 {

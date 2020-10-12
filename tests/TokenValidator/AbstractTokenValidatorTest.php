@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace t0mmy742\TokenAPI\Tests\TokenValidator;
+namespace T0mmy742\TokenAPI\Tests\TokenValidator;
 
 use DateInterval;
 use DateTimeImmutable;
@@ -19,10 +19,10 @@ use Lcobucci\JWT\Token\DataSet;
 use Lcobucci\JWT\Token\RegisteredClaims;
 use Prophecy\Prophecy\ObjectProphecy;
 use Slim\Psr7\Factory\ServerRequestFactory;
-use t0mmy742\TokenAPI\Exception\AccessDeniedException;
-use t0mmy742\TokenAPI\Repository\AccessTokenRepositoryInterface;
-use t0mmy742\TokenAPI\Tests\TestCase;
-use t0mmy742\TokenAPI\TokenValidator\AbstractTokenValidator;
+use T0mmy742\TokenAPI\Exception\AccessDeniedException;
+use T0mmy742\TokenAPI\Repository\AccessTokenRepositoryInterface;
+use T0mmy742\TokenAPI\Tests\TestCase;
+use T0mmy742\TokenAPI\TokenValidator\AbstractTokenValidator;
 
 class AbstractTokenValidatorTest extends TestCase
 {

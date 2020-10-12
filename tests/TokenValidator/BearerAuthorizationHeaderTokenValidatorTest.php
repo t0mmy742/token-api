@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace t0mmy742\TokenAPI\Tests\TokenValidator;
+namespace T0mmy742\TokenAPI\Tests\TokenValidator;
 
 use Lcobucci\JWT\Configuration;
 use Psr\Http\Message\ServerRequestInterface;
 use ReflectionClass;
 use Slim\Psr7\Factory\ServerRequestFactory;
-use t0mmy742\TokenAPI\Exception\AccessDeniedException;
-use t0mmy742\TokenAPI\Repository\AccessTokenRepositoryInterface;
-use t0mmy742\TokenAPI\Tests\TestCase;
-use t0mmy742\TokenAPI\TokenValidator\BearerAuthorizationHeaderTokenValidator;
+use T0mmy742\TokenAPI\Exception\AccessDeniedException;
+use T0mmy742\TokenAPI\Repository\AccessTokenRepositoryInterface;
+use T0mmy742\TokenAPI\Tests\TestCase;
+use T0mmy742\TokenAPI\TokenValidator\BearerAuthorizationHeaderTokenValidator;
 
 class BearerAuthorizationHeaderTokenValidatorTest extends TestCase
 {

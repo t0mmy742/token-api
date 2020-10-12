@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace t0mmy742\TokenAPI\Entities\Traits;
+namespace T0mmy742\TokenAPI\Entities\Traits;
 
 use DateTimeImmutable;
-use t0mmy742\TokenAPI\Entities\AccessTokenEntityInterface;
+use T0mmy742\TokenAPI\Entities\AccessTokenEntityInterface;
 
 trait RefreshTokenTrait
 {

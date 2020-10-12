@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace t0mmy742\TokenAPI\Middleware;
+namespace T0mmy742\TokenAPI\Middleware;
 
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use t0mmy742\TokenAPI\AuthorizationServer;
-use t0mmy742\TokenAPI\Exception\TokenApiException;
+use T0mmy742\TokenAPI\AuthorizationServer;
+use T0mmy742\TokenAPI\Exception\TokenApiException;
 
 use function json_encode;
 

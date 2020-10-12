@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace t0mmy742\TokenAPIExamples\Repositories;
+namespace T0mmy742\TokenAPIExamples\Repositories;
 
-use t0mmy742\TokenAPI\Entities\RefreshTokenEntityInterface;
-use t0mmy742\TokenAPI\Repository\RefreshTokenRepositoryInterface;
-use t0mmy742\TokenAPIExamples\Entities\RefreshTokenEntity;
+use T0mmy742\TokenAPI\Entities\RefreshTokenEntityInterface;
+use T0mmy742\TokenAPI\Repository\RefreshTokenRepositoryInterface;
+use T0mmy742\TokenAPIExamples\Entities\RefreshTokenEntity;
 
 class RefreshTokenRepository implements RefreshTokenRepositoryInterface
 {

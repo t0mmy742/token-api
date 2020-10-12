@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace t0mmy742\TokenAPI\TokenValidator;
+namespace T0mmy742\TokenAPI\TokenValidator;
 
 use Psr\Http\Message\ServerRequestInterface;
-use t0mmy742\TokenAPI\Exception\AccessDeniedException;
+use T0mmy742\TokenAPI\Exception\AccessDeniedException;
 
 use function preg_replace;
 use function trim;

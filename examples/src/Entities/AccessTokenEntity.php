@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace t0mmy742\TokenAPIExamples\Entities;
+namespace T0mmy742\TokenAPIExamples\Entities;
 
-use t0mmy742\TokenAPI\Entities\AccessTokenEntityInterface;
-use t0mmy742\TokenAPI\Entities\Traits\AccessTokenTrait;
-use t0mmy742\TokenAPI\Entities\Traits\EntityTrait;
+use T0mmy742\TokenAPI\Entities\AccessTokenEntityInterface;
+use T0mmy742\TokenAPI\Entities\Traits\AccessTokenTrait;
+use T0mmy742\TokenAPI\Entities\Traits\EntityTrait;
 
 class AccessTokenEntity implements AccessTokenEntityInterface
 {

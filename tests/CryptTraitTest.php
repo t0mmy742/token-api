@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace t0mmy742\TokenAPI\Tests;
+namespace T0mmy742\TokenAPI\Tests;
 
 use Defuse\Crypto\Key;
 use PHPUnit\Framework\TestCase;
-use t0mmy742\TokenAPI\Exception\EncryptionException;
-use t0mmy742\TokenAPI\Tests\Stubs\CryptTraitStub;
+use T0mmy742\TokenAPI\Exception\EncryptionException;
+use T0mmy742\TokenAPI\Tests\Stubs\CryptTraitStub;
 
 class CryptTraitTest extends TestCase
 {

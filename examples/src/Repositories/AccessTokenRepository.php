@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace t0mmy742\TokenAPIExamples\Repositories;
+namespace T0mmy742\TokenAPIExamples\Repositories;
 
-use t0mmy742\TokenAPI\Entities\AccessTokenEntityInterface;
-use t0mmy742\TokenAPI\Repository\AccessTokenRepositoryInterface;
-use t0mmy742\TokenAPIExamples\Entities\AccessTokenEntity;
+use T0mmy742\TokenAPI\Entities\AccessTokenEntityInterface;
+use T0mmy742\TokenAPI\Repository\AccessTokenRepositoryInterface;
+use T0mmy742\TokenAPIExamples\Entities\AccessTokenEntity;
 
 class AccessTokenRepository implements AccessTokenRepositoryInterface
 {

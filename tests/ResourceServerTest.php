@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace t0mmy742\TokenAPI\Tests;
+namespace T0mmy742\TokenAPI\Tests;
 
 use Slim\Psr7\Factory\ServerRequestFactory;
-use t0mmy742\TokenAPI\ResourceServer;
-use t0mmy742\TokenAPI\TokenValidator\TokenValidatorInterface;
+use T0mmy742\TokenAPI\ResourceServer;
+use T0mmy742\TokenAPI\TokenValidator\TokenValidatorInterface;
 
 class ResourceServerTest extends TestCase
 {

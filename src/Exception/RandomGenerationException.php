@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace t0mmy742\TokenAPI\Exception;
+namespace T0mmy742\TokenAPI\Exception;
 
 class RandomGenerationException extends TokenApiException
 {

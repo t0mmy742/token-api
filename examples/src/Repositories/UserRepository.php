@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace t0mmy742\TokenAPIExamples\Repositories;
+namespace T0mmy742\TokenAPIExamples\Repositories;
 
-use t0mmy742\TokenAPI\Entities\UserEntityInterface;
-use t0mmy742\TokenAPI\Repository\UserRepositoryInterface;
-use t0mmy742\TokenAPIExamples\Entities\UserEntity;
+use T0mmy742\TokenAPI\Entities\UserEntityInterface;
+use T0mmy742\TokenAPI\Repository\UserRepositoryInterface;
+use T0mmy742\TokenAPIExamples\Entities\UserEntity;
 
 class UserRepository implements UserRepositoryInterface
 {

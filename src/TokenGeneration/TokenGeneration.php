@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace t0mmy742\TokenAPI\TokenGeneration;
+namespace T0mmy742\TokenAPI\TokenGeneration;
 
 use DateInterval;
 use DateTimeImmutable;
@@ -11,19 +11,19 @@ use Exception;
 use Lcobucci\JWT\Configuration;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use t0mmy742\TokenAPI\CryptTrait;
-use t0mmy742\TokenAPI\Entities\AccessTokenEntityInterface;
-use t0mmy742\TokenAPI\Entities\RefreshTokenEntityInterface;
-use t0mmy742\TokenAPI\Entities\UserEntityInterface;
-use t0mmy742\TokenAPI\Exception\EncryptionException;
-use t0mmy742\TokenAPI\Exception\InvalidRefreshTokenException;
-use t0mmy742\TokenAPI\Exception\InvalidRequestException;
-use t0mmy742\TokenAPI\Exception\JsonEncodingException;
-use t0mmy742\TokenAPI\Exception\RandomGenerationException;
-use t0mmy742\TokenAPI\Exception\UniqueTokenIdentifierException;
-use t0mmy742\TokenAPI\Repository\AccessTokenRepositoryInterface;
-use t0mmy742\TokenAPI\Repository\RefreshTokenRepositoryInterface;
-use t0mmy742\TokenAPI\Repository\UserRepositoryInterface;
+use T0mmy742\TokenAPI\CryptTrait;
+use T0mmy742\TokenAPI\Entities\AccessTokenEntityInterface;
+use T0mmy742\TokenAPI\Entities\RefreshTokenEntityInterface;
+use T0mmy742\TokenAPI\Entities\UserEntityInterface;
+use T0mmy742\TokenAPI\Exception\EncryptionException;
+use T0mmy742\TokenAPI\Exception\InvalidRefreshTokenException;
+use T0mmy742\TokenAPI\Exception\InvalidRequestException;
+use T0mmy742\TokenAPI\Exception\JsonEncodingException;
+use T0mmy742\TokenAPI\Exception\RandomGenerationException;
+use T0mmy742\TokenAPI\Exception\UniqueTokenIdentifierException;
+use T0mmy742\TokenAPI\Repository\AccessTokenRepositoryInterface;
+use T0mmy742\TokenAPI\Repository\RefreshTokenRepositoryInterface;
+use T0mmy742\TokenAPI\Repository\UserRepositoryInterface;
 
 use function bin2hex;
 use function json_decode;
@@ -54,8 +54,8 @@ class TokenGeneration implements TokenGenerationInterface
         Key $encryptionKey
     ) {
         $this->accessTokenRepository = $accessTokenRepository;
-        $this->userRepository = $userRepository;
         $this->refreshTokenRepository = $refreshTokenRepository;
+        $this->userRepository = $userRepository;
         $this->accessTokenTTL = $accessTokenTTL;
         $this->refreshTokenTTL = $refreshTokenTTL;
         $this->jwtConfiguration = $jwtConfiguration;

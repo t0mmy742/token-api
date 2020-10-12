@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace t0mmy742\TokenAPIExamples\Entities;
+namespace T0mmy742\TokenAPIExamples\Entities;
 
-use t0mmy742\TokenAPI\Entities\UserEntityInterface;
+use T0mmy742\TokenAPI\Entities\UserEntityInterface;
 
 class UserEntity implements UserEntityInterface
 {

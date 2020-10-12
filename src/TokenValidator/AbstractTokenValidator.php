@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace t0mmy742\TokenAPI\TokenValidator;
+namespace T0mmy742\TokenAPI\TokenValidator;
 
 use DateTimeImmutable;
 use InvalidArgumentException;
@@ -14,8 +14,8 @@ use Lcobucci\JWT\Validation\Constraint\SignedWith;
 use Lcobucci\JWT\Validation\Constraint\ValidAt;
 use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
-use t0mmy742\TokenAPI\Exception\AccessDeniedException;
-use t0mmy742\TokenAPI\Repository\AccessTokenRepositoryInterface;
+use T0mmy742\TokenAPI\Exception\AccessDeniedException;
+use T0mmy742\TokenAPI\Repository\AccessTokenRepositoryInterface;
 
 use function time;
 

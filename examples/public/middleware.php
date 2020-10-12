@@ -10,14 +10,14 @@ use Lcobucci\JWT\Signer\Rsa\Sha256;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Factory\AppFactory;
-use t0mmy742\TokenAPI\AuthorizationServer;
-use t0mmy742\TokenAPI\Middleware\AuthorizationServerMiddleware;
-use t0mmy742\TokenAPI\Middleware\ResourceServerMiddleware;
-use t0mmy742\TokenAPI\ResourceServer;
-use t0mmy742\TokenAPI\TokenGeneration\TokenGeneration;
-use t0mmy742\TokenAPIExamples\Repositories\AccessTokenRepository;
-use t0mmy742\TokenAPIExamples\Repositories\RefreshTokenRepository;
-use t0mmy742\TokenAPIExamples\Repositories\UserRepository;
+use T0mmy742\TokenAPI\AuthorizationServer;
+use T0mmy742\TokenAPI\Middleware\AuthorizationServerMiddleware;
+use T0mmy742\TokenAPI\Middleware\ResourceServerMiddleware;
+use T0mmy742\TokenAPI\ResourceServer;
+use T0mmy742\TokenAPI\TokenGeneration\TokenGeneration;
+use T0mmy742\TokenAPIExamples\Repositories\AccessTokenRepository;
+use T0mmy742\TokenAPIExamples\Repositories\RefreshTokenRepository;
+use T0mmy742\TokenAPIExamples\Repositories\UserRepository;
 
 include __DIR__ . '/../vendor/autoload.php';
 

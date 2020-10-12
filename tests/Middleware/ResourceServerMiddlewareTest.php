@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace t0mmy742\TokenAPI\Tests\Middleware;
+namespace T0mmy742\TokenAPI\Tests\Middleware;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Psr7\Factory\ResponseFactory;
 use Slim\Psr7\Factory\ServerRequestFactory;
-use t0mmy742\TokenAPI\Exception\TokenApiException;
-use t0mmy742\TokenAPI\Middleware\ResourceServerMiddleware;
-use t0mmy742\TokenAPI\ResourceServer;
-use t0mmy742\TokenAPI\Tests\TestCase;
+use T0mmy742\TokenAPI\Exception\TokenApiException;
+use T0mmy742\TokenAPI\Middleware\ResourceServerMiddleware;
+use T0mmy742\TokenAPI\ResourceServer;
+use T0mmy742\TokenAPI\Tests\TestCase;
 
 use function json_encode;
 

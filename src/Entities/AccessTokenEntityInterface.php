@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace t0mmy742\TokenAPI\Entities;
+namespace T0mmy742\TokenAPI\Entities;
 
 use DateTimeImmutable;
 use Lcobucci\JWT\Configuration;

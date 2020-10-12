@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace t0mmy742\TokenAPI\Tests\TokenGeneration;
+namespace T0mmy742\TokenAPI\Tests\TokenGeneration;
 
 use DateInterval;
 use DateTimeImmutable;
@@ -17,21 +17,21 @@ use Psr\Http\Message\ResponseInterface;
 use ReflectionClass;
 use Slim\Psr7\Factory\ResponseFactory;
 use Slim\Psr7\Factory\ServerRequestFactory;
-use t0mmy742\TokenAPI\Entities\AccessTokenEntityInterface;
-use t0mmy742\TokenAPI\Entities\RefreshTokenEntityInterface;
-use t0mmy742\TokenAPI\Exception\InvalidRefreshTokenException;
-use t0mmy742\TokenAPI\Exception\InvalidRequestException;
-use t0mmy742\TokenAPI\Exception\JsonEncodingException;
-use t0mmy742\TokenAPI\Exception\RandomGenerationException;
-use t0mmy742\TokenAPI\Exception\UniqueTokenIdentifierException;
-use t0mmy742\TokenAPI\Repository\AccessTokenRepositoryInterface;
-use t0mmy742\TokenAPI\Repository\RefreshTokenRepositoryInterface;
-use t0mmy742\TokenAPI\Repository\UserRepositoryInterface;
-use t0mmy742\TokenAPI\Tests\Stubs\AccessTokenEntity;
-use t0mmy742\TokenAPI\Tests\Stubs\RefreshTokenEntity;
-use t0mmy742\TokenAPI\Tests\Stubs\UserEntity;
-use t0mmy742\TokenAPI\Tests\TestCase;
-use t0mmy742\TokenAPI\TokenGeneration\TokenGeneration;
+use T0mmy742\TokenAPI\Entities\AccessTokenEntityInterface;
+use T0mmy742\TokenAPI\Entities\RefreshTokenEntityInterface;
+use T0mmy742\TokenAPI\Exception\InvalidRefreshTokenException;
+use T0mmy742\TokenAPI\Exception\InvalidRequestException;
+use T0mmy742\TokenAPI\Exception\JsonEncodingException;
+use T0mmy742\TokenAPI\Exception\RandomGenerationException;
+use T0mmy742\TokenAPI\Exception\UniqueTokenIdentifierException;
+use T0mmy742\TokenAPI\Repository\AccessTokenRepositoryInterface;
+use T0mmy742\TokenAPI\Repository\RefreshTokenRepositoryInterface;
+use T0mmy742\TokenAPI\Repository\UserRepositoryInterface;
+use T0mmy742\TokenAPI\Tests\Stubs\AccessTokenEntity;
+use T0mmy742\TokenAPI\Tests\Stubs\RefreshTokenEntity;
+use T0mmy742\TokenAPI\Tests\Stubs\UserEntity;
+use T0mmy742\TokenAPI\Tests\TestCase;
+use T0mmy742\TokenAPI\TokenGeneration\TokenGeneration;
 
 use function json_encode;
 use function time;

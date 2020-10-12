@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace t0mmy742\TokenAPI;
+namespace T0mmy742\TokenAPI;
 
 use Defuse\Crypto\Crypto;
 use Defuse\Crypto\Exception\EnvironmentIsBrokenException;
 use Defuse\Crypto\Exception\WrongKeyOrModifiedCiphertextException;
 use Defuse\Crypto\Key;
-use t0mmy742\TokenAPI\Exception\EncryptionException;
+use T0mmy742\TokenAPI\Exception\EncryptionException;
 
 trait CryptTrait
 {

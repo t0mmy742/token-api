@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace t0mmy742\TokenAPI\TokenGeneration;
+namespace T0mmy742\TokenAPI\TokenGeneration;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use t0mmy742\TokenAPI\Exception\TokenApiException;
+use T0mmy742\TokenAPI\Exception\TokenApiException;
 
 interface TokenGenerationInterface
 {

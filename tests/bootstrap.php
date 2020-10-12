@@ -5,7 +5,7 @@ declare(strict_types=1);
 use AdrianSuter\Autoload\Override\Override;
 use Composer\Autoload\ClassLoader;
 use Defuse\Crypto\Core;
-use t0mmy742\TokenAPI\TokenGeneration\TokenGeneration;
+use T0mmy742\TokenAPI\TokenGeneration\TokenGeneration;
 
 /** @var ClassLoader $classLoader */
 $classLoader = require __DIR__ . '/../vendor/autoload.php';

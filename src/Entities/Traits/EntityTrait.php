@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace t0mmy742\TokenAPI\Entities\Traits;
+namespace T0mmy742\TokenAPI\Entities\Traits;
 
 trait EntityTrait
 {

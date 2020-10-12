@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace t0mmy742\TokenAPI\Repository;
+namespace T0mmy742\TokenAPI\Repository;
 
-use t0mmy742\TokenAPI\Entities\AccessTokenEntityInterface;
-use t0mmy742\TokenAPI\Exception\UniqueTokenIdentifierException;
+use T0mmy742\TokenAPI\Entities\AccessTokenEntityInterface;
+use T0mmy742\TokenAPI\Exception\UniqueTokenIdentifierException;
 
 interface AccessTokenRepositoryInterface
 {

@@ -14,8 +14,8 @@
     },
     "autoload": {
         "psr-4": {
-            "t0mmy742\\TokenAPIExamples\\": "src/",
-            "t0mmy742\\TokenAPI\\": "../src/"
+            "T0mmy742\\TokenAPIExamples\\": "src/",
+            "T0mmy742\\TokenAPI\\": "../src/"
         }
     }
 }

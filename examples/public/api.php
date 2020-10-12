@@ -9,10 +9,10 @@ use Lcobucci\JWT\Signer\Rsa\Sha256;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Factory\AppFactory;
-use t0mmy742\TokenAPI\Middleware\ResourceServerMiddleware;
-use t0mmy742\TokenAPI\ResourceServer;
-use t0mmy742\TokenAPI\TokenValidator\BearerAuthorizationHeaderTokenValidator;
-use t0mmy742\TokenAPIExamples\Repositories\AccessTokenRepository;
+use T0mmy742\TokenAPI\Middleware\ResourceServerMiddleware;
+use T0mmy742\TokenAPI\ResourceServer;
+use T0mmy742\TokenAPI\TokenValidator\BearerAuthorizationHeaderTokenValidator;
+use T0mmy742\TokenAPIExamples\Repositories\AccessTokenRepository;
 
 include __DIR__ . '/../vendor/autoload.php';
 

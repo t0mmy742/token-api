@@ -33,12 +33,12 @@
     },
     "autoload": {
         "psr-4": {
-            "t0mmy742\\TokenAPI\\": "src/"
+            "T0mmy742\\TokenAPI\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "t0mmy742\\TokenAPI\\Tests\\": "tests/"
+            "T0mmy742\\TokenAPI\\Tests\\": "tests/"
         }
     },
     "scripts": {

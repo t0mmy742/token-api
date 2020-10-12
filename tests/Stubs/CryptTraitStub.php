@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace t0mmy742\TokenAPI\Tests\Stubs;
+namespace T0mmy742\TokenAPI\Tests\Stubs;
 
 use Defuse\Crypto\Key;
-use t0mmy742\TokenAPI\CryptTrait;
+use T0mmy742\TokenAPI\CryptTrait;
 
 class CryptTraitStub
 {
