@@ -2,6 +2,7 @@
     "name": "t0mmy742/token-api",
     "description": "Secure API with access tokens (and optionally refresh tokens)",
     "type": "library",
+    "keywords": ["api", "token", "secure", "authorization"],
     "license": "MIT",
     "authors": [
         {
@@ -23,7 +24,7 @@
         "adriansuter/php-autoload-override": "^1.2",
         "phpspec/prophecy": "^1.12",
         "phpspec/prophecy-phpunit": "^2.0",
-        "phpstan/phpstan": "^0.12.48",
+        "phpstan/phpstan": "^0.12.49",
         "phpunit/phpunit": "^9.4",
         "slim/psr7": "^1.2",
         "squizlabs/php_codesniffer": "^3.5"
