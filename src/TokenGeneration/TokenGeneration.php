@@ -6,12 +6,11 @@ namespace T0mmy742\TokenAPI\TokenGeneration;
 
 use DateInterval;
 use DateTimeImmutable;
-use Defuse\Crypto\Key;
 use Exception;
 use Lcobucci\JWT\Configuration;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use T0mmy742\TokenAPI\CryptTrait;
+use T0mmy742\TokenAPI\Crypt\CryptInterface;
 use T0mmy742\TokenAPI\Entities\AccessTokenEntityInterface;
 use T0mmy742\TokenAPI\Entities\RefreshTokenEntityInterface;
 use T0mmy742\TokenAPI\Entities\UserEntityInterface;
@@ -33,13 +32,12 @@ use function time;
 
 class TokenGeneration implements TokenGenerationInterface
 {
-    use CryptTrait;
-
     private const MAX_TOKEN_GENERATION_ATTEMPTS = 5;
 
     private AccessTokenRepositoryInterface $accessTokenRepository;
     private RefreshTokenRepositoryInterface $refreshTokenRepository;
     private UserRepositoryInterface $userRepository;
+    private CryptInterface $crypt;
     private DateInterval $accessTokenTTL;
     private DateInterval $refreshTokenTTL;
     private Configuration $jwtConfiguration;
@@ -48,10 +46,10 @@ class TokenGeneration implements TokenGenerationInterface
         AccessTokenRepositoryInterface $accessTokenRepository,
         RefreshTokenRepositoryInterface $refreshTokenRepository,
         UserRepositoryInterface $userRepository,
+        CryptInterface $crypt,
         DateInterval $accessTokenTTL,
         DateInterval $refreshTokenTTL,
-        Configuration $jwtConfiguration,
-        Key $encryptionKey
+        Configuration $jwtConfiguration
     ) {
         $this->accessTokenRepository = $accessTokenRepository;
         $this->refreshTokenRepository = $refreshTokenRepository;
@@ -59,7 +57,7 @@ class TokenGeneration implements TokenGenerationInterface
         $this->accessTokenTTL = $accessTokenTTL;
         $this->refreshTokenTTL = $refreshTokenTTL;
         $this->jwtConfiguration = $jwtConfiguration;
-        $this->encryptionKey = $encryptionKey;
+        $this->crypt = $crypt;
     }
 
     /**
@@ -230,7 +228,7 @@ class TokenGeneration implements TokenGenerationInterface
                 throw new JsonEncodingException('Error while JSON encoding the refresh token payload');
             }
 
-            $responseParams['refresh_token'] = $this->encrypt($refreshTokenPayload);
+            $responseParams['refresh_token'] = $this->crypt->encrypt($refreshTokenPayload);
         }
 
         $responseParams = json_encode($responseParams);
@@ -287,7 +285,7 @@ class TokenGeneration implements TokenGenerationInterface
      * If the validation is successful, an array will be returned with refresh token information.
      *
      * @param ServerRequestInterface $request
-     * @return array
+     * @return array<string, string>
      * @throws InvalidRefreshTokenException
      */
     private function validateOldRefreshToken(ServerRequestInterface $request): array
@@ -297,7 +295,7 @@ class TokenGeneration implements TokenGenerationInterface
         $encryptedRefreshToken = $requestParameters['refresh_token'];
 
         try {
-            $refreshToken = $this->decrypt($encryptedRefreshToken);
+            $refreshToken = $this->crypt->decrypt($encryptedRefreshToken);
         } catch (EncryptionException $e) {
             throw new InvalidRefreshTokenException('Cannot decrypt the refresh token', 0, $e);
         }

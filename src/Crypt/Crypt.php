@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace T0mmy742\TokenAPI;
+namespace T0mmy742\TokenAPI\Crypt;
 
 use Defuse\Crypto\Crypto;
 use Defuse\Crypto\Exception\EnvironmentIsBrokenException;
@@ -10,18 +10,16 @@ use Defuse\Crypto\Exception\WrongKeyOrModifiedCiphertextException;
 use Defuse\Crypto\Key;
 use T0mmy742\TokenAPI\Exception\EncryptionException;
 
-trait CryptTrait
+class Crypt implements CryptInterface
 {
-    protected Key $encryptionKey;
+    private Key $encryptionKey;
 
-    /**
-     * Encrypt data with encryption key.
-     *
-     * @param string $unencryptedData
-     * @return string
-     * @throws EncryptionException
-     */
-    protected function encrypt(string $unencryptedData): string
+    public function __construct(Key $encryptionKey)
+    {
+        $this->encryptionKey = $encryptionKey;
+    }
+
+    public function encrypt(string $unencryptedData): string
     {
         try {
             return Crypto::encrypt($unencryptedData, $this->encryptionKey);
@@ -30,14 +28,7 @@ trait CryptTrait
         }
     }
 
-    /**
-     * Decrypt data with encryption key.
-     *
-     * @param string $encryptedData
-     * @return string
-     * @throws EncryptionException
-     */
-    protected function decrypt(string $encryptedData): string
+    public function decrypt(string $encryptedData): string
     {
         try {
             return Crypto::decrypt($encryptedData, $this->encryptionKey);

@@ -6,7 +6,6 @@ namespace T0mmy742\TokenAPI\Tests\TokenGeneration;
 
 use DateInterval;
 use DateTimeImmutable;
-use Defuse\Crypto\Crypto;
 use Defuse\Crypto\Key as KeyCrypt;
 use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Signer\Key;
@@ -17,8 +16,11 @@ use Psr\Http\Message\ResponseInterface;
 use ReflectionClass;
 use Slim\Psr7\Factory\ResponseFactory;
 use Slim\Psr7\Factory\ServerRequestFactory;
+use T0mmy742\TokenAPI\Crypt\Crypt;
+use T0mmy742\TokenAPI\Crypt\CryptInterface;
 use T0mmy742\TokenAPI\Entities\AccessTokenEntityInterface;
 use T0mmy742\TokenAPI\Entities\RefreshTokenEntityInterface;
+use T0mmy742\TokenAPI\Exception\EncryptionException;
 use T0mmy742\TokenAPI\Exception\InvalidRefreshTokenException;
 use T0mmy742\TokenAPI\Exception\InvalidRequestException;
 use T0mmy742\TokenAPI\Exception\JsonEncodingException;
@@ -42,29 +44,29 @@ class TokenGenerationTest extends TestCase
     private ObjectProphecy $accessTokenRepositoryProphecy;
     private ObjectProphecy $refreshTokenRepositoryProphecy;
     private ObjectProphecy $userRepositoryProphecy;
+    private ObjectProphecy $cryptProphecy;
     private Configuration $jwtConfiguration;
-    private KeyCrypt $keyCrypt;
 
     protected function setUp(): void
     {
         $this->accessTokenRepositoryProphecy = $this->prophesize(AccessTokenRepositoryInterface::class);
         $this->refreshTokenRepositoryProphecy = $this->prophesize(RefreshTokenRepositoryInterface::class);
         $this->userRepositoryProphecy = $this->prophesize(UserRepositoryInterface::class);
+        $this->cryptProphecy = $this->prophesize(CryptInterface::class);
         $this->jwtConfiguration = Configuration::forAsymmetricSigner(
             new Sha256(),
             new Key('file://' . __DIR__ . '/../Stubs/private.key'),
             new Key('file://' . __DIR__ . '/../Stubs/public.key')
         );
-        $this->keyCrypt = KeyCrypt::createNewRandomKey();
 
         $this->tokenGeneration = new TokenGeneration(
             $this->accessTokenRepositoryProphecy->reveal(),
             $this->refreshTokenRepositoryProphecy->reveal(),
             $this->userRepositoryProphecy->reveal(),
+            $this->cryptProphecy->reveal(),
             new DateInterval('PT1H'),
             new DateInterval('P1M'),
-            $this->jwtConfiguration,
-            $this->keyCrypt
+            $this->jwtConfiguration
         );
     }
 
@@ -202,6 +204,11 @@ class TokenGenerationTest extends TestCase
 
         $this->assertSame($accessToken, $refreshToken->getAccessToken());
 
+        $this->cryptProphecy
+            ->encrypt(Argument::type('string'))
+            ->shouldBeCalledOnce()
+            ->willReturn('ENCRYPTED_REFRESH_TOKEN');
+
         /** @var ResponseInterface $responseResult */
         $responseResult = $method->invoke(
             $this->tokenGeneration,
@@ -290,6 +297,11 @@ class TokenGenerationTest extends TestCase
             ->persistNewRefreshToken(Argument::type(RefreshTokenEntityInterface::class))
             ->shouldBeCalledOnce();
 
+        $this->cryptProphecy
+            ->encrypt(Argument::type('string'))
+            ->shouldBeCalledOnce()
+            ->willReturn('ENCRYPTED_REFRESH_TOKEN');
+
         $responseResult = $this->tokenGeneration->respondToTokenRequest(
             $serverRequest,
             (new ResponseFactory())->createResponse()
@@ -347,10 +359,15 @@ class TokenGenerationTest extends TestCase
             'expire_time'      => time() + 3600
         ]);
         $parsedBody = [
-            'refresh_token' => Crypto::encrypt($refreshTokenPayload, $this->keyCrypt)
+            'refresh_token' => 'REFRESH_TOKEN'
         ];
         $serverRequest = (new ServerRequestFactory())->createServerRequest('POST', '/token')
             ->withParsedBody($parsedBody);
+
+        $this->cryptProphecy
+            ->decrypt('REFRESH_TOKEN')
+            ->shouldBeCalledOnce()
+            ->willReturn($refreshTokenPayload);
 
         $this->refreshTokenRepositoryProphecy
             ->isRefreshTokenRevoked('REFRESH_TOKEN_ID')
@@ -385,6 +402,11 @@ class TokenGenerationTest extends TestCase
             ->persistNewRefreshToken(Argument::type(RefreshTokenEntityInterface::class))
             ->shouldBeCalledOnce();
 
+        $this->cryptProphecy
+            ->encrypt(Argument::type('string'))
+            ->shouldBeCalledOnce()
+            ->willReturn('ENCRYPTED_REFRESH_TOKEN');
+
         $responseResult = $this->tokenGeneration->respondToTokenRequest(
             $serverRequest,
             (new ResponseFactory())->createResponse()
@@ -400,6 +422,11 @@ class TokenGenerationTest extends TestCase
         $serverRequest = (new ServerRequestFactory())->createServerRequest('POST', '/token')
             ->withParsedBody($parsedBody);
 
+        $this->cryptProphecy
+            ->decrypt('BAD_REFRESH_TOKEN')
+            ->shouldBeCalledOnce()
+            ->willThrow(EncryptionException::class);
+
         $this->expectException(InvalidRefreshTokenException::class);
         $this->expectExceptionMessage('Cannot decrypt the refresh token');
         $this->tokenGeneration->respondToTokenRequest($serverRequest, (new ResponseFactory())->createResponse());
@@ -414,10 +441,15 @@ class TokenGenerationTest extends TestCase
             'expire_time'      => time() - 1
         ]);
         $parsedBody = [
-            'refresh_token' => Crypto::encrypt($refreshTokenPayload, $this->keyCrypt)
+            'refresh_token' => 'REFRESH_TOKEN'
         ];
         $serverRequest = (new ServerRequestFactory())->createServerRequest('POST', '/token')
             ->withParsedBody($parsedBody);
+
+        $this->cryptProphecy
+            ->decrypt('REFRESH_TOKEN')
+            ->shouldBeCalledOnce()
+            ->willReturn($refreshTokenPayload);
 
         $this->expectException(InvalidRefreshTokenException::class);
         $this->expectExceptionMessage('Token has expired');
@@ -434,10 +466,15 @@ class TokenGenerationTest extends TestCase
         ]);
 
         $parsedBody = [
-            'refresh_token' => Crypto::encrypt($refreshTokenPayload, $this->keyCrypt)
+            'refresh_token' => 'REFRESH_TOKEN'
         ];
         $serverRequest = (new ServerRequestFactory())->createServerRequest('POST', '/token')
             ->withParsedBody($parsedBody);
+
+        $this->cryptProphecy
+            ->decrypt('REFRESH_TOKEN')
+            ->shouldBeCalledOnce()
+            ->willReturn($refreshTokenPayload);
 
         $this->refreshTokenRepositoryProphecy
             ->isRefreshTokenRevoked('REFRESH_TOKEN_ID')
