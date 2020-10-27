@@ -59,6 +59,14 @@ Override::apply($classLoader, [
             }
 
             return random_bytes($length);
+        },
+        'time' => function (): int {
+            if (isset($GLOBALS['time_10'])) {
+                unset($GLOBALS['time_10']);
+                return 10;
+            }
+
+            return time();
         }
     ]
 ]);

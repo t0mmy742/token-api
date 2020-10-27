@@ -44,15 +44,5 @@
         "psr-4": {
             "T0mmy742\\TokenAPI\\Tests\\": "tests/"
         }
-    },
-    "scripts": {
-        "test": [
-            "@phpcs",
-            "@phpstan",
-            "@phpunit"
-        ],
-        "phpcs": "phpcs",
-        "phpstan": "phpstan analyse --memory-limit=-1",
-        "phpunit": "phpunit"
     }
 }

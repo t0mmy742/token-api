@@ -32,6 +32,7 @@ use T0mmy742\TokenAPI\Tests\Stubs\RefreshTokenEntity;
 use T0mmy742\TokenAPI\Tests\Stubs\UserEntity;
 use T0mmy742\TokenAPI\TokenGeneration\TokenGeneration;
 
+use function json_decode;
 use function json_encode;
 use function time;
 
@@ -199,7 +200,8 @@ class TokenGenerationTest extends TestCase
 
         $accessToken = new AccessTokenEntity();
         $accessToken->setUserIdentifier('USER_ID');
-        $accessToken->setExpiryDateTime((new DateTimeImmutable('@' . time()))->add(new DateInterval('PT1H')));
+        $accessTokenExpiryDateTime = (new DateTimeImmutable('@' . time()))->add(new DateInterval('PT1H'));
+        $accessToken->setExpiryDateTime($accessTokenExpiryDateTime);
         $accessToken->setJwtConfiguration($this->jwtConfiguration);
         $accessToken->setIdentifier('ACCESS_TOKEN_ID');
 
@@ -216,6 +218,8 @@ class TokenGenerationTest extends TestCase
             ->with($this->isType('string'))
             ->willReturn('ENCRYPTED_REFRESH_TOKEN');
 
+        $GLOBALS['time_10'] = true;
+
         /** @var ResponseInterface $responseResult */
         $responseResult = $method->invoke(
             $this->tokenGeneration,
@@ -225,6 +229,9 @@ class TokenGenerationTest extends TestCase
         );
 
         $this->assertSame(200, $responseResult->getStatusCode());
+
+        $responseData = json_decode((string) $responseResult->getBody(), true);
+        $this->assertSame($accessTokenExpiryDateTime->getTimestamp() - 10, $responseData['expires_in']);
     }
 
     public function testJsonErrorRefreshTokenPayloadGenerateHttpResponse(): void

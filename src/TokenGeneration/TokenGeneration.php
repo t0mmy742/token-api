@@ -124,8 +124,7 @@ class TokenGeneration implements TokenGenerationInterface
 
                 return $accessToken;
             } catch (UniqueTokenIdentifierException $e) {
-                $tokenGenerationAttempts++;
-                if ($tokenGenerationAttempts === self::MAX_TOKEN_GENERATION_ATTEMPTS) {
+                if (++$tokenGenerationAttempts === self::MAX_TOKEN_GENERATION_ATTEMPTS) {
                     throw $e;
                 }
             }
@@ -167,8 +166,7 @@ class TokenGeneration implements TokenGenerationInterface
 
                 return $refreshToken;
             } catch (UniqueTokenIdentifierException $e) {
-                $tokenGenerationAttempts++;
-                if ($tokenGenerationAttempts === self::MAX_TOKEN_GENERATION_ATTEMPTS) {
+                if (++$tokenGenerationAttempts === self::MAX_TOKEN_GENERATION_ATTEMPTS) {
                     throw $e;
                 }
             }

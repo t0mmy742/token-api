@@ -12,7 +12,7 @@ install:
 script:
   - vendor/bin/phpunit --coverage-text --coverage-clover build/logs/clover.xml
   - vendor/bin/phpcs
-  - vendor/bin/phpstan analyse src
+  - vendor/bin/phpstan analyse
 
 after_success:
   - travis_retry php vendor/bin/php-coveralls -v
