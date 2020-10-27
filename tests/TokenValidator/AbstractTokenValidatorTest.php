@@ -17,22 +17,24 @@ use Lcobucci\JWT\Signer\Rsa\Sha256;
 use Lcobucci\JWT\Token;
 use Lcobucci\JWT\Token\DataSet;
 use Lcobucci\JWT\Token\RegisteredClaims;
-use Prophecy\Prophecy\ObjectProphecy;
+use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
 use Slim\Psr7\Factory\ServerRequestFactory;
 use T0mmy742\TokenAPI\Exception\AccessDeniedException;
 use T0mmy742\TokenAPI\Repository\AccessTokenRepositoryInterface;
-use T0mmy742\TokenAPI\Tests\TestCase;
 use T0mmy742\TokenAPI\TokenValidator\AbstractTokenValidator;
 
 class AbstractTokenValidatorTest extends TestCase
 {
+    /** @var AbstractTokenValidator&MockObject */
     private AbstractTokenValidator $abstractTokenValidator;
-    private ObjectProphecy $accessTokenRepositoryInterfaceProphecy;
+    /** @var AccessTokenRepositoryInterface&MockObject */
+    private AccessTokenRepositoryInterface $accessTokenRepositoryInterface;
     private Configuration $jwtConfiguration;
 
     protected function setUp(): void
     {
-        $this->accessTokenRepositoryInterfaceProphecy = $this->prophesize(AccessTokenRepositoryInterface::class);
+        $this->accessTokenRepositoryInterface = $this->createMock(AccessTokenRepositoryInterface::class);
 
         $this->jwtConfiguration = Configuration::forAsymmetricSigner(
             new Sha256(),
@@ -41,7 +43,7 @@ class AbstractTokenValidatorTest extends TestCase
         );
 
         $this->abstractTokenValidator = $this->getMockForAbstractClass(AbstractTokenValidator::class, [
-            $this->accessTokenRepositoryInterfaceProphecy->reveal(),
+            $this->accessTokenRepositoryInterface,
             $this->jwtConfiguration
         ]);
     }
@@ -63,9 +65,10 @@ class AbstractTokenValidatorTest extends TestCase
             ->method('retrieveToken')
             ->willReturn((string) $token);
 
-        $this->accessTokenRepositoryInterfaceProphecy
-            ->isAccessTokenRevoked($token->claims()->get(RegisteredClaims::ID))
-            ->shouldBeCalledOnce()
+        $this->accessTokenRepositoryInterface
+            ->expects($this->once())
+            ->method('isAccessTokenRevoked')
+            ->with($token->claims()->get(RegisteredClaims::ID))
             ->willReturn(false);
 
         $serverRequest = $this->abstractTokenValidator->validateToken($serverRequest);
@@ -83,7 +86,7 @@ class AbstractTokenValidatorTest extends TestCase
         $this->abstractTokenValidator
             ->expects($this->once())
             ->method('retrieveToken')
-            ->willReturn((string) $token);
+            ->willReturn($token);
 
         $this->expectException(AccessDeniedException::class);
         $this->abstractTokenValidator->validateToken($serverRequest);
@@ -258,9 +261,10 @@ class AbstractTokenValidatorTest extends TestCase
             ->method('retrieveToken')
             ->willReturn((string) $token);
 
-        $this->accessTokenRepositoryInterfaceProphecy
-            ->isAccessTokenRevoked($token->claims()->get(RegisteredClaims::ID))
-            ->shouldBeCalledOnce()
+        $this->accessTokenRepositoryInterface
+            ->expects($this->once())
+            ->method('isAccessTokenRevoked')
+            ->with($token->claims()->get(RegisteredClaims::ID))
             ->willReturn(true);
 
         $this->expectException(AccessDeniedException::class);

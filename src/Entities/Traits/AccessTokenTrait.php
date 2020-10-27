@@ -97,7 +97,7 @@ trait AccessTokenTrait
             ->issuedAt(new DateTimeImmutable('@' . time()))
             ->canOnlyBeUsedAfter(new DateTimeImmutable('@' . time()))
             ->expiresAt($this->getExpiryDateTime())
-            ->relatedTo((string) $this->getUserIdentifier())
+            ->relatedTo($this->getUserIdentifier())
             ->getToken($this->jwtConfiguration->getSigner(), $this->jwtConfiguration->getSigningKey());
     }
 }

@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace T0mmy742\TokenAPI\Tests\TokenValidator;
 
 use Lcobucci\JWT\Configuration;
+use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 use ReflectionClass;
 use Slim\Psr7\Factory\ServerRequestFactory;
 use T0mmy742\TokenAPI\Exception\AccessDeniedException;
 use T0mmy742\TokenAPI\Repository\AccessTokenRepositoryInterface;
-use T0mmy742\TokenAPI\Tests\TestCase;
 use T0mmy742\TokenAPI\TokenValidator\BearerAuthorizationHeaderTokenValidator;
 
 class BearerAuthorizationHeaderTokenValidatorTest extends TestCase
@@ -18,7 +18,7 @@ class BearerAuthorizationHeaderTokenValidatorTest extends TestCase
     private function retrieveTokenMethod(ServerRequestInterface $request): string
     {
         $bearerAuthorizationHeaderTokenValidator = new BearerAuthorizationHeaderTokenValidator(
-            $this->prophesize(AccessTokenRepositoryInterface::class)->reveal(),
+            $this->createStub(AccessTokenRepositoryInterface::class),
             Configuration::forUnsecuredSigner()
         );
         $class = new ReflectionClass($bearerAuthorizationHeaderTokenValidator);

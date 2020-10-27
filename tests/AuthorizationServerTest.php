@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace T0mmy742\TokenAPI\Tests;
 
+use PHPUnit\Framework\TestCase;
 use Slim\Psr7\Factory\ResponseFactory;
 use Slim\Psr7\Factory\ServerRequestFactory;
 use T0mmy742\TokenAPI\AuthorizationServer;
@@ -16,10 +17,14 @@ class AuthorizationServerTest extends TestCase
         $serverRequest = (new ServerRequestFactory())->createServerRequest('POST', '/token');
         $response = (new ResponseFactory())->createResponse();
 
-        $tokenGenerationProphecy = $this->prophesize(TokenGenerationInterface::class);
-        $tokenGenerationProphecy->respondToTokenRequest($serverRequest, $response)->willReturn($response);
+        $tokenGeneration = $this->createMock(TokenGenerationInterface::class);
+        $tokenGeneration
+            ->expects($this->once())
+            ->method('respondToTokenRequest')
+            ->with($serverRequest, $response)
+            ->willReturn($response);
 
-        $authorizationServer = new AuthorizationServer($tokenGenerationProphecy->reveal());
+        $authorizationServer = new AuthorizationServer($tokenGeneration);
 
         $responseResult = $authorizationServer->respondToTokenRequest($serverRequest, $response);
 

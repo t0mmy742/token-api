@@ -30,7 +30,10 @@ class ResourceServerMiddleware implements MiddlewareInterface
         try {
             $request = $this->resourceServer->validateAuthenticatedRequest($request);
         } catch (TokenApiException $e) {
-            $responseBody = json_encode(['error' => $e->getMessage()]) ?: 'JSON encoding failed';
+            $responseBody = json_encode(['error' => $e->getMessage()]);
+            if ($responseBody === false) {
+                $responseBody = 'JSON encoding failed';
+            }
 
             $response = $this->responseFactory->createResponse();
             $response->getBody()->write($responseBody);

@@ -6,17 +6,15 @@ namespace T0mmy742\TokenAPI\Tests\TokenGeneration;
 
 use DateInterval;
 use DateTimeImmutable;
-use Defuse\Crypto\Key as KeyCrypt;
 use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Signer\Key;
 use Lcobucci\JWT\Signer\Rsa\Sha256;
-use Prophecy\Argument;
-use Prophecy\Prophecy\ObjectProphecy;
+use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use ReflectionClass;
 use Slim\Psr7\Factory\ResponseFactory;
 use Slim\Psr7\Factory\ServerRequestFactory;
-use T0mmy742\TokenAPI\Crypt\Crypt;
 use T0mmy742\TokenAPI\Crypt\CryptInterface;
 use T0mmy742\TokenAPI\Entities\AccessTokenEntityInterface;
 use T0mmy742\TokenAPI\Entities\RefreshTokenEntityInterface;
@@ -32,7 +30,6 @@ use T0mmy742\TokenAPI\Repository\UserRepositoryInterface;
 use T0mmy742\TokenAPI\Tests\Stubs\AccessTokenEntity;
 use T0mmy742\TokenAPI\Tests\Stubs\RefreshTokenEntity;
 use T0mmy742\TokenAPI\Tests\Stubs\UserEntity;
-use T0mmy742\TokenAPI\Tests\TestCase;
 use T0mmy742\TokenAPI\TokenGeneration\TokenGeneration;
 
 use function json_encode;
@@ -41,18 +38,22 @@ use function time;
 class TokenGenerationTest extends TestCase
 {
     private TokenGeneration $tokenGeneration;
-    private ObjectProphecy $accessTokenRepositoryProphecy;
-    private ObjectProphecy $refreshTokenRepositoryProphecy;
-    private ObjectProphecy $userRepositoryProphecy;
-    private ObjectProphecy $cryptProphecy;
+    /** @var AccessTokenRepositoryInterface&MockObject */
+    private AccessTokenRepositoryInterface $accessTokenRepository;
+    /** @var RefreshTokenRepositoryInterface&MockObject */
+    private RefreshTokenRepositoryInterface $refreshTokenRepository;
+    /** @var UserRepositoryInterface&MockObject */
+    private UserRepositoryInterface $userRepository;
+    /** @var CryptInterface&MockObject */
+    private CryptInterface $crypt;
     private Configuration $jwtConfiguration;
 
     protected function setUp(): void
     {
-        $this->accessTokenRepositoryProphecy = $this->prophesize(AccessTokenRepositoryInterface::class);
-        $this->refreshTokenRepositoryProphecy = $this->prophesize(RefreshTokenRepositoryInterface::class);
-        $this->userRepositoryProphecy = $this->prophesize(UserRepositoryInterface::class);
-        $this->cryptProphecy = $this->prophesize(CryptInterface::class);
+        $this->accessTokenRepository = $this->createMock(AccessTokenRepositoryInterface::class);
+        $this->refreshTokenRepository = $this->createMock(RefreshTokenRepositoryInterface::class);
+        $this->userRepository = $this->createMock(UserRepositoryInterface::class);
+        $this->crypt = $this->createMock(CryptInterface::class);
         $this->jwtConfiguration = Configuration::forAsymmetricSigner(
             new Sha256(),
             new Key('file://' . __DIR__ . '/../Stubs/private.key'),
@@ -60,10 +61,10 @@ class TokenGenerationTest extends TestCase
         );
 
         $this->tokenGeneration = new TokenGeneration(
-            $this->accessTokenRepositoryProphecy->reveal(),
-            $this->refreshTokenRepositoryProphecy->reveal(),
-            $this->userRepositoryProphecy->reveal(),
-            $this->cryptProphecy->reveal(),
+            $this->accessTokenRepository,
+            $this->refreshTokenRepository,
+            $this->userRepository,
+            $this->crypt,
             new DateInterval('PT1H'),
             new DateInterval('P1M'),
             $this->jwtConfiguration
@@ -78,14 +79,16 @@ class TokenGenerationTest extends TestCase
 
         $accessToken = new AccessTokenEntity();
         $accessToken->setUserIdentifier('1');
-        $this->accessTokenRepositoryProphecy
-            ->getNewToken('1')
-            ->shouldBeCalledOnce()
+        $this->accessTokenRepository
+            ->expects($this->once())
+            ->method('getNewToken')
+            ->with('1')
             ->willReturn($accessToken);
 
-        $this->accessTokenRepositoryProphecy
-            ->persistNewAccessToken(Argument::type(AccessTokenEntityInterface::class))
-            ->shouldBeCalledOnce();
+        $this->accessTokenRepository
+            ->expects($this->once())
+            ->method("persistNewAccessToken")
+            ->with($this->isInstanceOf(AccessTokenEntityInterface::class));
 
         $accessTokenResult = $method->invoke($this->tokenGeneration, new DateInterval('PT1H'), '1');
 
@@ -100,15 +103,16 @@ class TokenGenerationTest extends TestCase
 
         $accessToken = new AccessTokenEntity();
         $accessToken->setUserIdentifier('1');
-        $this->accessTokenRepositoryProphecy
-            ->getNewToken('1')
-            ->shouldBeCalledOnce()
+        $this->accessTokenRepository
+            ->expects($this->once())
+            ->method('getNewToken')
+            ->with('1')
             ->willReturn($accessToken);
 
-        $this->accessTokenRepositoryProphecy
-            ->persistNewAccessToken(Argument::type(AccessTokenEntityInterface::class))
-            ->shouldBeCalledTimes(5)
-            ->willThrow(UniqueTokenIdentifierException::class);
+        $this->accessTokenRepository
+            ->expects($this->exactly(5))
+            ->method("persistNewAccessToken")
+            ->willThrowException(new UniqueTokenIdentifierException());
 
         $this->expectException(UniqueTokenIdentifierException::class);
         $method->invoke($this->tokenGeneration, new DateInterval('PT1H'), '1');
@@ -121,14 +125,15 @@ class TokenGenerationTest extends TestCase
         $method->setAccessible(true);
 
         $refreshToken = new RefreshTokenEntity();
-        $this->refreshTokenRepositoryProphecy
-            ->getNewRefreshToken()
-            ->shouldBeCalledOnce()
+        $this->refreshTokenRepository
+            ->expects($this->once())
+            ->method('getNewRefreshToken')
             ->willReturn($refreshToken);
 
-        $this->refreshTokenRepositoryProphecy
-            ->persistNewRefreshToken(Argument::type(RefreshTokenEntityInterface::class))
-            ->shouldBeCalledOnce();
+        $this->refreshTokenRepository
+            ->expects($this->once())
+            ->method("persistNewRefreshToken")
+            ->with($this->isInstanceOf(RefreshTokenEntityInterface::class));
 
         $refreshTokenResult = $method->invoke($this->tokenGeneration, new AccessTokenEntity());
 
@@ -141,14 +146,14 @@ class TokenGenerationTest extends TestCase
         $method = $class->getMethod('issueRefreshToken');
         $method->setAccessible(true);
 
-        $this->refreshTokenRepositoryProphecy
-            ->getNewRefreshToken()
-            ->shouldBeCalledOnce()
+        $this->refreshTokenRepository
+            ->expects($this->once())
+            ->method("getNewRefreshToken")
             ->willReturn(null);
 
         $refreshTokenResult = $method->invoke($this->tokenGeneration, new AccessTokenEntity());
 
-        $this->assertSame(null, $refreshTokenResult);
+        $this->assertNull($refreshTokenResult);
     }
 
     public function testIssueRefreshTokenErrorOnPersist(): void
@@ -158,15 +163,16 @@ class TokenGenerationTest extends TestCase
         $method->setAccessible(true);
 
         $refreshToken = new RefreshTokenEntity();
-        $this->refreshTokenRepositoryProphecy
-            ->getNewRefreshToken()
-            ->shouldBeCalledOnce()
+        $this->refreshTokenRepository
+            ->expects($this->once())
+            ->method("getNewRefreshToken")
             ->willReturn($refreshToken);
 
-        $this->refreshTokenRepositoryProphecy
-            ->persistNewRefreshToken(Argument::type(RefreshTokenEntityInterface::class))
-            ->shouldBeCalledTimes(5)
-            ->willThrow(UniqueTokenIdentifierException::class);
+        $this->refreshTokenRepository
+            ->expects($this->exactly(5))
+            ->method('persistNewRefreshToken')
+            ->with($this->isInstanceOf(RefreshTokenEntityInterface::class))
+            ->willThrowException(new UniqueTokenIdentifierException());
 
         $this->expectException(UniqueTokenIdentifierException::class);
         $method->invoke($this->tokenGeneration, new AccessTokenEntity());
@@ -204,9 +210,10 @@ class TokenGenerationTest extends TestCase
 
         $this->assertSame($accessToken, $refreshToken->getAccessToken());
 
-        $this->cryptProphecy
-            ->encrypt(Argument::type('string'))
-            ->shouldBeCalledOnce()
+        $this->crypt
+            ->expects($this->once())
+            ->method('encrypt')
+            ->with($this->isType('string'))
             ->willReturn('ENCRYPTED_REFRESH_TOKEN');
 
         /** @var ResponseInterface $responseResult */
@@ -272,34 +279,39 @@ class TokenGenerationTest extends TestCase
         $serverRequest = (new ServerRequestFactory())->createServerRequest('POST', '/token')
             ->withParsedBody($parsedBody);
 
-        $this->userRepositoryProphecy
-            ->getUserEntityByUserCredentials('admin', 'pass')
-            ->shouldBeCalledOnce()
+        $this->userRepository
+            ->expects($this->once())
+            ->method('getUserEntityByUserCredentials')
+            ->with('admin', 'pass')
             ->willReturn(new UserEntity());
 
         $accessToken = new AccessTokenEntity();
         $accessToken->setUserIdentifier('1');
-        $this->accessTokenRepositoryProphecy
-            ->getNewToken('1')
-            ->shouldBeCalledOnce()
+        $this->accessTokenRepository
+            ->expects($this->once())
+            ->method('getNewToken')
+            ->with('1')
             ->willReturn($accessToken);
 
-        $this->accessTokenRepositoryProphecy
-            ->persistNewAccessToken(Argument::type(AccessTokenEntityInterface::class))
-            ->shouldBeCalledOnce();
+        $this->accessTokenRepository
+            ->expects($this->once())
+            ->method('persistNewAccessToken')
+            ->with($this->isInstanceOf(AccessTokenEntityInterface::class));
 
-        $this->refreshTokenRepositoryProphecy
-            ->getNewRefreshToken()
-            ->shouldBeCalledOnce()
+        $this->refreshTokenRepository
+            ->expects($this->once())
+            ->method('getNewRefreshToken')
             ->willReturn(new RefreshTokenEntity());
 
-        $this->refreshTokenRepositoryProphecy
-            ->persistNewRefreshToken(Argument::type(RefreshTokenEntityInterface::class))
-            ->shouldBeCalledOnce();
+        $this->refreshTokenRepository
+            ->expects($this->once())
+            ->method('persistNewRefreshToken')
+            ->with($this->isInstanceOf(RefreshTokenEntityInterface::class));
 
-        $this->cryptProphecy
-            ->encrypt(Argument::type('string'))
-            ->shouldBeCalledOnce()
+        $this->crypt
+            ->expects($this->once())
+            ->method('encrypt')
+            ->with($this->isType('string'))
             ->willReturn('ENCRYPTED_REFRESH_TOKEN');
 
         $responseResult = $this->tokenGeneration->respondToTokenRequest(
@@ -340,9 +352,10 @@ class TokenGenerationTest extends TestCase
         $serverRequest = (new ServerRequestFactory())->createServerRequest('POST', '/token')
             ->withParsedBody($parsedBody);
 
-        $this->userRepositoryProphecy
-            ->getUserEntityByUserCredentials('admin', 'pass')
-            ->shouldBeCalledOnce()
+        $this->userRepository
+            ->expects($this->once())
+            ->method('getUserEntityByUserCredentials')
+            ->with('admin', 'pass')
             ->willReturn(null);
 
         $this->expectException(InvalidRequestException::class);
@@ -364,47 +377,55 @@ class TokenGenerationTest extends TestCase
         $serverRequest = (new ServerRequestFactory())->createServerRequest('POST', '/token')
             ->withParsedBody($parsedBody);
 
-        $this->cryptProphecy
-            ->decrypt('REFRESH_TOKEN')
-            ->shouldBeCalledOnce()
+        $this->crypt
+            ->expects($this->once())
+            ->method('decrypt')
+            ->with('REFRESH_TOKEN')
             ->willReturn($refreshTokenPayload);
 
-        $this->refreshTokenRepositoryProphecy
-            ->isRefreshTokenRevoked('REFRESH_TOKEN_ID')
-            ->shouldBeCalledOnce()
+        $this->refreshTokenRepository
+            ->expects($this->once())
+            ->method('isRefreshTokenRevoked')
+            ->with('REFRESH_TOKEN_ID')
             ->willReturn(false);
 
-        $this->accessTokenRepositoryProphecy
-            ->revokeAccessToken('ACCESS_TOKEN_ID')
-            ->shouldBeCalledOnce();
+        $this->accessTokenRepository
+            ->expects($this->once())
+            ->method('revokeAccessToken')
+            ->with('ACCESS_TOKEN_ID');
 
-        $this->refreshTokenRepositoryProphecy
-            ->revokeRefreshToken('REFRESH_TOKEN_ID')
-            ->shouldBeCalledOnce();
+        $this->refreshTokenRepository
+            ->expects($this->once())
+            ->method('revokeRefreshToken')
+            ->with('REFRESH_TOKEN_ID');
 
         $accessToken = new AccessTokenEntity();
         $accessToken->setUserIdentifier('USER_ID');
-        $this->accessTokenRepositoryProphecy
-            ->getNewToken('USER_ID')
-            ->shouldBeCalledOnce()
+        $this->accessTokenRepository
+            ->expects($this->once())
+            ->method('getNewToken')
+            ->with('USER_ID')
             ->willReturn($accessToken);
 
-        $this->accessTokenRepositoryProphecy
-            ->persistNewAccessToken(Argument::type(AccessTokenEntityInterface::class))
-            ->shouldBeCalledOnce();
+        $this->accessTokenRepository
+            ->expects($this->once())
+            ->method('persistNewAccessToken')
+            ->with($this->isInstanceOf(AccessTokenEntityInterface::class));
 
-        $this->refreshTokenRepositoryProphecy
-            ->getNewRefreshToken()
-            ->shouldBeCalledOnce()
+        $this->refreshTokenRepository
+            ->expects($this->once())
+            ->method('getNewRefreshToken')
             ->willReturn(new RefreshTokenEntity());
 
-        $this->refreshTokenRepositoryProphecy
-            ->persistNewRefreshToken(Argument::type(RefreshTokenEntityInterface::class))
-            ->shouldBeCalledOnce();
+        $this->refreshTokenRepository
+            ->expects($this->once())
+            ->method('persistNewRefreshToken')
+            ->with($this->isInstanceOf(RefreshTokenEntityInterface::class));
 
-        $this->cryptProphecy
-            ->encrypt(Argument::type('string'))
-            ->shouldBeCalledOnce()
+        $this->crypt
+            ->expects($this->once())
+            ->method('encrypt')
+            ->with($this->isType('string'))
             ->willReturn('ENCRYPTED_REFRESH_TOKEN');
 
         $responseResult = $this->tokenGeneration->respondToTokenRequest(
@@ -422,10 +443,11 @@ class TokenGenerationTest extends TestCase
         $serverRequest = (new ServerRequestFactory())->createServerRequest('POST', '/token')
             ->withParsedBody($parsedBody);
 
-        $this->cryptProphecy
-            ->decrypt('BAD_REFRESH_TOKEN')
-            ->shouldBeCalledOnce()
-            ->willThrow(EncryptionException::class);
+        $this->crypt
+            ->expects($this->once())
+            ->method('decrypt')
+            ->with('BAD_REFRESH_TOKEN')
+            ->willThrowException(new EncryptionException());
 
         $this->expectException(InvalidRefreshTokenException::class);
         $this->expectExceptionMessage('Cannot decrypt the refresh token');
@@ -446,9 +468,10 @@ class TokenGenerationTest extends TestCase
         $serverRequest = (new ServerRequestFactory())->createServerRequest('POST', '/token')
             ->withParsedBody($parsedBody);
 
-        $this->cryptProphecy
-            ->decrypt('REFRESH_TOKEN')
-            ->shouldBeCalledOnce()
+        $this->crypt
+            ->expects($this->once())
+            ->method('decrypt')
+            ->with('REFRESH_TOKEN')
             ->willReturn($refreshTokenPayload);
 
         $this->expectException(InvalidRefreshTokenException::class);
@@ -471,14 +494,16 @@ class TokenGenerationTest extends TestCase
         $serverRequest = (new ServerRequestFactory())->createServerRequest('POST', '/token')
             ->withParsedBody($parsedBody);
 
-        $this->cryptProphecy
-            ->decrypt('REFRESH_TOKEN')
-            ->shouldBeCalledOnce()
+        $this->crypt
+            ->expects($this->once())
+            ->method('decrypt')
+            ->with('REFRESH_TOKEN')
             ->willReturn($refreshTokenPayload);
 
-        $this->refreshTokenRepositoryProphecy
-            ->isRefreshTokenRevoked('REFRESH_TOKEN_ID')
-            ->shouldBeCalledOnce()
+        $this->refreshTokenRepository
+            ->expects($this->once())
+            ->method('isRefreshTokenRevoked')
+            ->with('REFRESH_TOKEN_ID')
             ->willReturn(true);
 
         $this->expectException(InvalidRefreshTokenException::class);

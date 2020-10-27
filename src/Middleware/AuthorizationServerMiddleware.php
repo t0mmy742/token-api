@@ -30,7 +30,10 @@ class AuthorizationServerMiddleware implements MiddlewareInterface
         try {
             return $this->authorizationServer->respondToTokenRequest($request, $handler->handle($request));
         } catch (TokenApiException $e) {
-            $responseBody = json_encode(['error' => $e->getMessage()]) ?: 'JSON encoding failed';
+            $responseBody = json_encode(['error' => $e->getMessage()]);
+            if ($responseBody === false) {
+                $responseBody = 'JSON encoding failed';
+            }
 
             $response = $this->responseFactory->createResponse();
             $response->getBody()->write($responseBody);

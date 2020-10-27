@@ -37,9 +37,9 @@ abstract class AbstractTokenValidator implements TokenValidatorInterface
         try {
             $token = $this->jwtConfiguration->getParser()->parse($jwt);
         } catch (InvalidArgumentException $e) {
-            throw new AccessDeniedException($e->getMessage());
+            throw new AccessDeniedException($e->getMessage(), 0, $e);
         } catch (RuntimeException $e) {
-            throw new AccessDeniedException('Error while decoding from JSON');
+            throw new AccessDeniedException('Error while decoding from JSON', 0, $e);
         }
 
         if ($token instanceof Plain === false) {

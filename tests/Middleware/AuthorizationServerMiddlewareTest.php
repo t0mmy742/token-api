@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace T0mmy742\TokenAPI\Tests\Middleware;
 
-use Prophecy\Argument;
+use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
@@ -13,23 +13,22 @@ use Slim\Psr7\Factory\ServerRequestFactory;
 use T0mmy742\TokenAPI\AuthorizationServer;
 use T0mmy742\TokenAPI\Exception\TokenApiException;
 use T0mmy742\TokenAPI\Middleware\AuthorizationServerMiddleware;
-use T0mmy742\TokenAPI\Tests\TestCase;
 
 use function json_encode;
 
 class AuthorizationServerMiddlewareTest extends TestCase
 {
-
     public function testReturnToken(): void
     {
         $serverRequest = (new ServerRequestFactory())->createServerRequest('POST', '/access_token');
         $response = (new ResponseFactory())->createResponse();
 
-        $authorizationServerProphecy = $this->prophesize(AuthorizationServer::class);
-        $authorizationServerProphecy->respondToTokenRequest($serverRequest, Argument::type(ResponseInterface::class))
-            ->willReturn($response)
-            ->shouldBeCalledOnce();
-        $authorizationServer = $authorizationServerProphecy->reveal();
+        $authorizationServer = $this->createMock(AuthorizationServer::class);
+        $authorizationServer
+            ->expects($this->once())
+            ->method('respondToTokenRequest')
+            ->with($serverRequest, $this->isInstanceOf(ResponseInterface::class))
+            ->willReturn($response);
 
         $authorizationServerMiddleware = new AuthorizationServerMiddleware($authorizationServer, new ResponseFactory());
 
@@ -57,11 +56,12 @@ class AuthorizationServerMiddlewareTest extends TestCase
     {
         $serverRequest = (new ServerRequestFactory())->createServerRequest('POST', '/access_token');
 
-        $authorizationServerProphecy = $this->prophesize(AuthorizationServer::class);
-        $authorizationServerProphecy->respondToTokenRequest($serverRequest, Argument::type(ResponseInterface::class))
-            ->willThrow(new TokenApiException('Invalid token'))
-            ->shouldBeCalledOnce();
-        $authorizationServer = $authorizationServerProphecy->reveal();
+        $authorizationServer = $this->createMock(AuthorizationServer::class);
+        $authorizationServer
+            ->expects($this->once())
+            ->method('respondToTokenRequest')
+            ->with($serverRequest, $this->isInstanceOf(ResponseInterface::class))
+            ->willThrowException(new TokenApiException('Invalid token'));
 
         $authorizationServerMiddleware = new AuthorizationServerMiddleware($authorizationServer, new ResponseFactory());
 
@@ -75,5 +75,32 @@ class AuthorizationServerMiddlewareTest extends TestCase
         $response = $authorizationServerMiddleware->process($serverRequest, $handler);
 
         $this->assertSame(json_encode(['error' => 'Invalid token']), (string) $response->getBody());
+    }
+
+    public function testBadJsonEncoding(): void
+    {
+        $serverRequest = (new ServerRequestFactory())->createServerRequest('POST', '/access_token');
+
+        $authorizationServer = $this->createMock(AuthorizationServer::class);
+        $authorizationServer
+            ->expects($this->once())
+            ->method('respondToTokenRequest')
+            ->with($serverRequest, $this->isInstanceOf(ResponseInterface::class))
+            ->willThrowException(new TokenApiException('Invalid token'));
+
+        $authorizationServerMiddleware = new AuthorizationServerMiddleware($authorizationServer, new ResponseFactory());
+
+        $handler = new class implements RequestHandlerInterface {
+            public function handle(ServerRequestInterface $request): ResponseInterface
+            {
+                return (new ResponseFactory())->createResponse();
+            }
+        };
+
+        $GLOBALS['json_encode_false'] = true;
+
+        $response = $authorizationServerMiddleware->process($serverRequest, $handler);
+
+        $this->assertSame('JSON encoding failed', (string) $response->getBody());
     }
 }
