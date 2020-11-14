@@ -33,6 +33,7 @@ class CryptTest extends TestCase
         $GLOBALS['crypto_defuse_exception'] = true;
 
         $this->expectException(EncryptionException::class);
+        $this->expectExceptionCode(0);
         $crypt->encrypt($unencryptedData);
     }
 
@@ -45,6 +46,7 @@ class CryptTest extends TestCase
         $crypt = new Crypt(Key::createNewRandomKey());
 
         $this->expectException(EncryptionException::class);
+        $this->expectExceptionCode(0);
         $crypt->decrypt($encryptedData);
     }
 }

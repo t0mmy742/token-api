@@ -21,7 +21,7 @@ class BearerAuthorizationHeaderTokenValidator extends AbstractTokenValidator
      */
     protected function retrieveToken(ServerRequestInterface $request): string
     {
-        if ($request->hasHeader('authorization') === false) {
+        if ($request->hasHeader('Authorization') === false) {
             throw new AccessDeniedException('Missing "Authorization" header');
         }
 

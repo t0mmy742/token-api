@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - New `phpstan` rules
+- Added `infection/infection` package to test mutations
 
 ### Changed
 - Remove `Crypt` trait and use `CryptInterface`
+- Updated tests
 
 ### Delete
 - Remove Prophecy `phpspec/prophecy` usage for testing

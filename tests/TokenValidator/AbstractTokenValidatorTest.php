@@ -89,6 +89,7 @@ class AbstractTokenValidatorTest extends TestCase
             ->willReturn($token);
 
         $this->expectException(AccessDeniedException::class);
+        $this->expectExceptionCode(0);
         $this->abstractTokenValidator->validateToken($serverRequest);
     }
 
@@ -123,6 +124,7 @@ class AbstractTokenValidatorTest extends TestCase
 
         $this->expectException(AccessDeniedException::class);
         $this->expectExceptionMessage('Error while decoding from JSON');
+        $this->expectExceptionCode(0);
         $this->abstractTokenValidator->validateToken($serverRequest);
     }
 

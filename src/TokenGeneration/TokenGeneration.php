@@ -106,8 +106,6 @@ class TokenGeneration implements TokenGenerationInterface
      * @return AccessTokenEntityInterface
      * @throws RandomGenerationException
      * @throws UniqueTokenIdentifierException
-     *
-     * @noinspection PhpInconsistentReturnPointsInspection
      */
     private function issueAccessToken(DateInterval $accessTokenTTL, $userIdentifier): AccessTokenEntityInterface
     {
@@ -117,22 +115,19 @@ class TokenGeneration implements TokenGenerationInterface
 
         $tokenGenerationAttempts = 0;
 
-        while ($tokenGenerationAttempts < self::MAX_TOKEN_GENERATION_ATTEMPTS) {
+        while ($tokenGenerationAttempts++ < self::MAX_TOKEN_GENERATION_ATTEMPTS) {
             $accessToken->setIdentifier($this->generateUniqueIdentifier());
             try {
                 $this->accessTokenRepository->persistNewAccessToken($accessToken);
 
                 return $accessToken;
             } catch (UniqueTokenIdentifierException $e) {
-                if (++$tokenGenerationAttempts === self::MAX_TOKEN_GENERATION_ATTEMPTS) {
-                    throw $e;
-                }
+                $exception = $e;
             }
         }
-        // @phpstan-ignore-next-line
-        // @codeCoverageIgnoreStart
+        /** @noinspection PhpUndefinedVariableInspection */
+        throw $exception;
     }
-    // @codeCoverageIgnoreEnd
 
     /**
      * Issue a new refresh token for a previous authorized access token.
@@ -143,8 +138,6 @@ class TokenGeneration implements TokenGenerationInterface
      * @return RefreshTokenEntityInterface|null
      * @throws RandomGenerationException
      * @throws UniqueTokenIdentifierException
-     *
-     * @noinspection PhpInconsistentReturnPointsInspection
      */
     private function issueRefreshToken(AccessTokenEntityInterface $accessToken): ?RefreshTokenEntityInterface
     {
@@ -159,22 +152,19 @@ class TokenGeneration implements TokenGenerationInterface
 
         $tokenGenerationAttempts = 0;
 
-        while ($tokenGenerationAttempts < self::MAX_TOKEN_GENERATION_ATTEMPTS) {
+        while ($tokenGenerationAttempts++ < self::MAX_TOKEN_GENERATION_ATTEMPTS) {
             $refreshToken->setIdentifier($this->generateUniqueIdentifier());
             try {
                 $this->refreshTokenRepository->persistNewRefreshToken($refreshToken);
 
                 return $refreshToken;
             } catch (UniqueTokenIdentifierException $e) {
-                if (++$tokenGenerationAttempts === self::MAX_TOKEN_GENERATION_ATTEMPTS) {
-                    throw $e;
-                }
+                $exception = $e;
             }
         }
-        // @phpstan-ignore-next-line
-        // @codeCoverageIgnoreStart
+        /** @noinspection PhpUndefinedVariableInspection */
+        throw $exception;
     }
-    // @codeCoverageIgnoreEnd
 
     /**
      * Generate a unique identifier for access token.
@@ -300,7 +290,7 @@ class TokenGeneration implements TokenGenerationInterface
 
         $refreshTokenData = json_decode($refreshToken, true);
 
-        if ($refreshTokenData['expire_time'] < time()) {
+        if ($refreshTokenData['expire_time'] <= time()) {
             throw new InvalidRefreshTokenException('Token has expired');
         }
 

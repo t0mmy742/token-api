@@ -19,7 +19,7 @@ class BearerAuthorizationHeaderTokenValidatorTest extends TestCase
     {
         $bearerAuthorizationHeaderTokenValidator = new BearerAuthorizationHeaderTokenValidator(
             $this->createStub(AccessTokenRepositoryInterface::class),
-            Configuration::forUnsecuredSigner()
+            $this->createStub(Configuration::class)
         );
         $class = new ReflectionClass($bearerAuthorizationHeaderTokenValidator);
         $method = $class->getMethod('retrieveToken');
@@ -32,20 +32,78 @@ class BearerAuthorizationHeaderTokenValidatorTest extends TestCase
     {
         $token = 'MY_TOKEN';
 
-        $serverRequest = (new ServerRequestFactory())->createServerRequest('GET', '/test')
-            ->withHeader('Authorization', 'Bearer ' . $token);
+        $serverRequest = $this->createMock(ServerRequestInterface::class);
+        $serverRequest
+            ->expects($this->once())
+            ->method('hasHeader')
+            ->with('Authorization')
+            ->willReturn(true);
+        $serverRequest
+            ->expects($this->once())
+            ->method('getHeader')
+            ->with('Authorization')
+            ->willReturn(['Bearer ' . $token]);
 
         $tokenResult = $this->retrieveTokenMethod($serverRequest);
 
         $this->assertSame($token, $tokenResult);
     }
 
+    public function testUntrimmedHeader(): void
+    {
+        $token = ' MY_TOKEN ';
+
+        $serverRequest = $this->createMock(ServerRequestInterface::class);
+        $serverRequest
+            ->expects($this->once())
+            ->method('hasHeader')
+            ->with('Authorization')
+            ->willReturn(true);
+        $serverRequest
+            ->expects($this->once())
+            ->method('getHeader')
+            ->with('Authorization')
+            ->willReturn(['Bearer ' . $token]);
+
+        $tokenResult = $this->retrieveTokenMethod($serverRequest);
+
+        $this->assertSame(trim($token), $tokenResult);
+    }
+
     public function testNoHeader(): void
     {
-        $serverRequest = (new ServerRequestFactory())->createServerRequest('GET', '/test');
+        $serverRequest = $this->createMock(ServerRequestInterface::class);
+        $serverRequest
+            ->expects($this->once())
+            ->method('hasHeader')
+            ->with('Authorization')
+            ->willReturn(false);
 
         $this->expectException(AccessDeniedException::class);
         $this->expectExceptionMessage('Missing "Authorization" header');
         $this->retrieveTokenMethod($serverRequest);
+    }
+
+    public function testErrorPregReplace(): void
+    {
+        $token = 'MY_TOKEN';
+
+        $serverRequest = $this->createMock(ServerRequestInterface::class);
+        $serverRequest
+            ->expects($this->once())
+            ->method('hasHeader')
+            ->with('Authorization')
+            ->willReturn(true);
+        $serverRequest
+            ->expects($this->once())
+            ->method('getHeader')
+            ->with('Authorization')
+            ->willReturn(['Bearer ' . $token]);
+
+        $GLOBALS['preg_replace_null'] = true;
+
+        $tokenResult = $this->retrieveTokenMethod($serverRequest);
+
+        $this->assertEquals('', $tokenResult);
     }
 }

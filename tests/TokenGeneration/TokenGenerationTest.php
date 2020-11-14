@@ -12,9 +12,9 @@ use Lcobucci\JWT\Signer\Rsa\Sha256;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use ReflectionClass;
 use Slim\Psr7\Factory\ResponseFactory;
-use Slim\Psr7\Factory\ServerRequestFactory;
 use T0mmy742\TokenAPI\Crypt\CryptInterface;
 use T0mmy742\TokenAPI\Entities\AccessTokenEntityInterface;
 use T0mmy742\TokenAPI\Entities\RefreshTokenEntityInterface;
@@ -94,6 +94,7 @@ class TokenGenerationTest extends TestCase
         $accessTokenResult = $method->invoke($this->tokenGeneration, new DateInterval('PT1H'), '1');
 
         $this->assertSame($accessToken, $accessTokenResult);
+        $this->assertSame(64, strlen($accessTokenResult->getIdentifier()));
     }
 
     public function testIssueAccessTokenErrorOnPersist(): void
@@ -136,9 +137,12 @@ class TokenGenerationTest extends TestCase
             ->method("persistNewRefreshToken")
             ->with($this->isInstanceOf(RefreshTokenEntityInterface::class));
 
-        $refreshTokenResult = $method->invoke($this->tokenGeneration, new AccessTokenEntity());
+        $accessToken = new AccessTokenEntity();
+
+        $refreshTokenResult = $method->invoke($this->tokenGeneration, $accessToken);
 
         $this->assertSame($refreshToken, $refreshTokenResult);
+        $this->assertSame($accessToken, $refreshTokenResult->getAccessToken());
     }
 
     public function testIssueRefreshTokenNullToken(): void
@@ -189,6 +193,7 @@ class TokenGenerationTest extends TestCase
 
         $this->expectException(RandomGenerationException::class);
         $this->expectExceptionMessage('Could not generate a random string');
+        $this->expectExceptionCode(0);
         $method->invoke($this->tokenGeneration);
     }
 
@@ -206,7 +211,8 @@ class TokenGenerationTest extends TestCase
         $accessToken->setIdentifier('ACCESS_TOKEN_ID');
 
         $refreshToken = new RefreshTokenEntity();
-        $refreshToken->setExpiryDateTime((new DateTimeImmutable('@' . time()))->add(new DateInterval('P1M')));
+        $refreshTokenExpiryDateTime = (new DateTimeImmutable('@' . time()))->add(new DateInterval('P1M'));
+        $refreshToken->setExpiryDateTime($refreshTokenExpiryDateTime);
         $refreshToken->setAccessToken($accessToken);
         $refreshToken->setIdentifier('REFRESH_TOKEN_ID');
 
@@ -216,7 +222,7 @@ class TokenGenerationTest extends TestCase
             ->expects($this->once())
             ->method('encrypt')
             ->with($this->isType('string'))
-            ->willReturn('ENCRYPTED_REFRESH_TOKEN');
+            ->willReturnArgument(0);
 
         $GLOBALS['time_10'] = true;
 
@@ -231,7 +237,38 @@ class TokenGenerationTest extends TestCase
         $this->assertSame(200, $responseResult->getStatusCode());
 
         $responseData = json_decode((string) $responseResult->getBody(), true);
+        $this->assertSame('Bearer', $responseData['token_type']);
         $this->assertSame($accessTokenExpiryDateTime->getTimestamp() - 10, $responseData['expires_in']);
+        $this->assertIsString($responseData['access_token']);
+        $refreshTokenDecoded = json_decode($responseData['refresh_token'], true);
+        $this->assertSame('REFRESH_TOKEN_ID', $refreshTokenDecoded['refresh_token_id']);
+        $this->assertSame('ACCESS_TOKEN_ID', $refreshTokenDecoded['access_token_id']);
+        $this->assertSame('USER_ID', $refreshTokenDecoded['user_id']);
+        $this->assertSame($refreshTokenExpiryDateTime->getTimestamp(), $refreshTokenDecoded['expire_time']);
+    }
+
+    public function testGoodGenerateHttpResponseWithoutRefreshToken(): void
+    {
+        $class = new ReflectionClass($this->tokenGeneration);
+        $method = $class->getMethod('generateHttpResponse');
+        $method->setAccessible(true);
+
+        $accessToken = new AccessTokenEntity();
+        $accessToken->setUserIdentifier('USER_ID');
+        $accessTokenExpiryDateTime = (new DateTimeImmutable('@' . time()))->add(new DateInterval('PT1H'));
+        $accessToken->setExpiryDateTime($accessTokenExpiryDateTime);
+        $accessToken->setJwtConfiguration($this->jwtConfiguration);
+        $accessToken->setIdentifier('ACCESS_TOKEN_ID');
+
+        /** @var ResponseInterface $responseResult */
+        $responseResult = $method->invoke(
+            $this->tokenGeneration,
+            (new ResponseFactory())->createResponse(),
+            $accessToken,
+            null
+        );
+
+        $this->assertSame(200, $responseResult->getStatusCode());
     }
 
     public function testJsonErrorRefreshTokenPayloadGenerateHttpResponse(): void
@@ -279,12 +316,17 @@ class TokenGenerationTest extends TestCase
 
     public function testValidRespondToTokenRequest(): void
     {
-        $parsedBody = [
+        // PSR-7 ServerRequestInterface::getParsedBody can return null|array|object.
+        $parsedBody = (object) [
             'username' => 'admin',
             'password' => 'pass'
         ];
-        $serverRequest = (new ServerRequestFactory())->createServerRequest('POST', '/token')
-            ->withParsedBody($parsedBody);
+
+        $serverRequest = $this->createMock(ServerRequestInterface::class);
+        $serverRequest
+            ->expects($this->exactly(2))
+            ->method('getParsedBody')
+            ->willReturn($parsedBody);
 
         $this->userRepository
             ->expects($this->once())
@@ -330,7 +372,11 @@ class TokenGenerationTest extends TestCase
 
     public function testNoUsername(): void
     {
-        $serverRequest = (new ServerRequestFactory())->createServerRequest('POST', '/token');
+        $serverRequest = $this->createMock(ServerRequestInterface::class);
+        $serverRequest
+            ->expects($this->exactly(2))
+            ->method('getParsedBody')
+            ->willReturn(null);
 
         $this->expectException(InvalidRequestException::class);
         $this->expectExceptionMessage('username');
@@ -342,8 +388,11 @@ class TokenGenerationTest extends TestCase
         $parsedBody = [
             'username' => 'admin'
         ];
-        $serverRequest = (new ServerRequestFactory())->createServerRequest('POST', '/token')
-            ->withParsedBody($parsedBody);
+        $serverRequest = $this->createMock(ServerRequestInterface::class);
+        $serverRequest
+            ->expects($this->exactly(2))
+            ->method('getParsedBody')
+            ->willReturn($parsedBody);
 
         $this->expectException(InvalidRequestException::class);
         $this->expectExceptionMessage('password');
@@ -356,8 +405,11 @@ class TokenGenerationTest extends TestCase
             'username' => 'admin',
             'password' => 'pass'
         ];
-        $serverRequest = (new ServerRequestFactory())->createServerRequest('POST', '/token')
-            ->withParsedBody($parsedBody);
+        $serverRequest = $this->createMock(ServerRequestInterface::class);
+        $serverRequest
+            ->expects($this->exactly(2))
+            ->method('getParsedBody')
+            ->willReturn($parsedBody);
 
         $this->userRepository
             ->expects($this->once())
@@ -378,11 +430,15 @@ class TokenGenerationTest extends TestCase
             'user_id'          => 'USER_ID',
             'expire_time'      => time() + 3600
         ]);
-        $parsedBody = [
+        // PSR-7 ServerRequestInterface::getParsedBody can return null|array|object.
+        $parsedBody = (object) [
             'refresh_token' => 'REFRESH_TOKEN'
         ];
-        $serverRequest = (new ServerRequestFactory())->createServerRequest('POST', '/token')
-            ->withParsedBody($parsedBody);
+        $serverRequest = $this->createMock(ServerRequestInterface::class);
+        $serverRequest
+            ->expects($this->exactly(2))
+            ->method('getParsedBody')
+            ->willReturn($parsedBody);
 
         $this->crypt
             ->expects($this->once())
@@ -447,8 +503,11 @@ class TokenGenerationTest extends TestCase
         $parsedBody = [
             'refresh_token' => 'BAD_REFRESH_TOKEN'
         ];
-        $serverRequest = (new ServerRequestFactory())->createServerRequest('POST', '/token')
-            ->withParsedBody($parsedBody);
+        $serverRequest = $this->createMock(ServerRequestInterface::class);
+        $serverRequest
+            ->expects($this->exactly(2))
+            ->method('getParsedBody')
+            ->willReturn($parsedBody);
 
         $this->crypt
             ->expects($this->once())
@@ -458,6 +517,7 @@ class TokenGenerationTest extends TestCase
 
         $this->expectException(InvalidRefreshTokenException::class);
         $this->expectExceptionMessage('Cannot decrypt the refresh token');
+        $this->expectExceptionCode(0);
         $this->tokenGeneration->respondToTokenRequest($serverRequest, (new ResponseFactory())->createResponse());
     }
 
@@ -467,13 +527,16 @@ class TokenGenerationTest extends TestCase
             'refresh_token_id' => 'REFRESH_TOKEN_ID',
             'access_token_id'  => 'ACCESS_TOKEN_ID',
             'user_id'          => 'USER_ID',
-            'expire_time'      => time() - 1
+            'expire_time'      => time()
         ]);
         $parsedBody = [
             'refresh_token' => 'REFRESH_TOKEN'
         ];
-        $serverRequest = (new ServerRequestFactory())->createServerRequest('POST', '/token')
-            ->withParsedBody($parsedBody);
+        $serverRequest = $this->createMock(ServerRequestInterface::class);
+        $serverRequest
+            ->expects($this->exactly(2))
+            ->method('getParsedBody')
+            ->willReturn($parsedBody);
 
         $this->crypt
             ->expects($this->once())
@@ -498,8 +561,11 @@ class TokenGenerationTest extends TestCase
         $parsedBody = [
             'refresh_token' => 'REFRESH_TOKEN'
         ];
-        $serverRequest = (new ServerRequestFactory())->createServerRequest('POST', '/token')
-            ->withParsedBody($parsedBody);
+        $serverRequest = $this->createMock(ServerRequestInterface::class);
+        $serverRequest
+            ->expects($this->exactly(2))
+            ->method('getParsedBody')
+            ->willReturn($parsedBody);
 
         $this->crypt
             ->expects($this->once())
