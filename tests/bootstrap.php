@@ -6,6 +6,7 @@ use AdrianSuter\Autoload\Override\Override;
 use Composer\Autoload\ClassLoader;
 use Defuse\Crypto\Core;
 use t0mmy742\StreamWrapper\StreamWrapper;
+use T0mmy742\TokenAPI\Crypt\SodiumCrypt;
 use T0mmy742\TokenAPI\Middleware\AuthorizationServerMiddleware;
 use T0mmy742\TokenAPI\Middleware\ResourceServerMiddleware;
 use T0mmy742\TokenAPI\TokenGeneration\TokenGeneration;
@@ -53,6 +54,73 @@ Override::apply($classLoader, [
             }
 
             return json_encode($value);
+        }
+    ],
+    SodiumCrypt::class => [
+        'base64_decode' => function (string $data, bool $strict = null) {
+            if (isset($GLOBALS['base64_decode_false'])) {
+                unset($GLOBALS['base64_decode_false']);
+                return false;
+            }
+
+            return base64_decode($data, $strict);
+        },
+        'file_exists' => function (string $filename): bool {
+            if (isset($GLOBALS['file_exists'])) {
+                $return = $GLOBALS['file_exists'];
+                unset($GLOBALS['file_exists']);
+                return $return;
+            }
+
+            return file_exists($filename);
+        },
+        'file_get_contents' => function (string $filename) {
+            if (isset($GLOBALS['file_get_contents'])) {
+                $return = $GLOBALS['file_get_contents'];
+                unset($GLOBALS['file_get_contents']);
+                if ($return === true) {
+                    return '6a0ec376e2519f20eeef2a32de12587050ba09e214b4055842dba4f9f1b991b6';
+                } elseif ($return === false) {
+                    return false;
+                } else {
+                    return $return;
+                }
+            }
+
+            return file_get_contents($filename);
+        },
+        'file_put_contents' => function ($filename, $data) {
+            if (isset($GLOBALS['file_put_contents'])) {
+                unset($GLOBALS['file_put_contents']);
+                return 0;
+            }
+
+            return file_put_contents($filename, $data);
+        },
+        'is_readable' => function (string $filename): bool {
+            if (isset($GLOBALS['is_readable'])) {
+                $return = $GLOBALS['is_readable'];
+                unset($GLOBALS['is_readable']);
+                return $return;
+            }
+
+            return is_readable($filename);
+        },
+        'mb_strlen' => function (string $str, string $encoding = null): int {
+            if (isset($GLOBALS['mb_strlen'])) {
+                unset($GLOBALS['mb_strlen']);
+                return 0;
+            }
+
+            return mb_strlen($str, $encoding);
+        },
+        'sodium_crypto_secretbox_open' => function (string $ciphertext, string $nonce, string $key) {
+            if (isset($GLOBALS['sodium_crypto_secretbox_open_false'])) {
+                unset($GLOBALS['sodium_crypto_secretbox_open_false']);
+                return false;
+            }
+
+            return sodium_crypto_secretbox_open($ciphertext, $nonce, $key);
         }
     ],
     TokenGeneration::class => [
