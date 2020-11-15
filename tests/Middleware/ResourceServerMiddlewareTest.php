@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace T0mmy742\TokenAPI\Tests\Middleware;
 
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\StreamInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use Slim\Psr7\Factory\ResponseFactory;
-use Slim\Psr7\Factory\ServerRequestFactory;
 use T0mmy742\TokenAPI\Exception\TokenApiException;
 use T0mmy742\TokenAPI\Middleware\ResourceServerMiddleware;
 use T0mmy742\TokenAPI\ResourceServer;
@@ -20,37 +20,36 @@ class ResourceServerMiddlewareTest extends TestCase
 {
     public function testValidToken(): void
     {
-        $serverRequest = (new ServerRequestFactory())->createServerRequest('GET', '/test');
+        $serverRequest = $this->createMock(ServerRequestInterface::class);
+        $response = $this->createStub(ResponseInterface::class);
 
         $resourceServer = $this->createMock(ResourceServer::class);
         $resourceServer
             ->expects($this->once())
             ->method('validateAuthenticatedRequest')
             ->with($serverRequest)
-            ->willReturn(
-                $serverRequest
-                    ->withAttribute('access_token_id', 'token_id')
-                    ->withAttribute('user_id', '1')
-            );
+            ->willReturnArgument(0);
 
-        $resourceServerMiddleware = new ResourceServerMiddleware($resourceServer, new ResponseFactory());
+        $resourceServerMiddleware = new ResourceServerMiddleware(
+            $resourceServer,
+            $this->createStub(ResponseFactoryInterface::class)
+        );
 
-        $handler = new class extends TestCase implements RequestHandlerInterface {
-            public function handle(ServerRequestInterface $request): ResponseInterface
-            {
-                $this->assertSame('1', $request->getAttribute('user_id'));
-                return (new ResponseFactory())->createResponse();
-            }
-        };
+        $handler = $this->createMock(RequestHandlerInterface::class);
+        $handler
+            ->expects($this->once())
+            ->method('handle')
+            ->with($serverRequest)
+            ->willReturn($response);
 
-        $response = $resourceServerMiddleware->process($serverRequest, $handler);
+        $responseResult = $resourceServerMiddleware->process($serverRequest, $handler);
 
-        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame($responseResult, $response);
     }
 
     public function testInvalidToken(): void
     {
-        $serverRequest = (new ServerRequestFactory())->createServerRequest('GET', '/badTest');
+        $serverRequest = $this->createStub(ServerRequestInterface::class);
 
         $resourceServer = $this->createMock(ResourceServer::class);
         $resourceServer
@@ -59,23 +58,32 @@ class ResourceServerMiddlewareTest extends TestCase
             ->with($serverRequest)
             ->willThrowException(new TokenApiException('Invalid token'));
 
-        $resourceServerMiddleware = new ResourceServerMiddleware($resourceServer, new ResponseFactory());
+        $response = $this->createMock(ResponseInterface::class);
+        $stream = $this->createMock(StreamInterface::class);
+        $responseFactory = $this->createMock(ResponseFactoryInterface::class);
+        $responseFactory
+            ->expects($this->once())
+            ->method('createResponse')
+            ->willReturn($response);
+        $response
+            ->expects($this->once())
+            ->method('getBody')
+            ->willReturn($stream);
+        $stream
+            ->expects($this->once())
+            ->method('write')
+            ->with(json_encode(['error' => 'Invalid token']));
 
-        $handler = new class implements RequestHandlerInterface {
-            public function handle(ServerRequestInterface $request): ResponseInterface
-            {
-                return (new ResponseFactory())->createResponse();
-            }
-        };
+        $resourceServerMiddleware = new ResourceServerMiddleware($resourceServer, $responseFactory);
 
-        $response = $resourceServerMiddleware->process($serverRequest, $handler);
+        $handler = $this->createStub(RequestHandlerInterface::class);
 
-        $this->assertSame(json_encode(['error' => 'Invalid token']), (string) $response->getBody());
+        $resourceServerMiddleware->process($serverRequest, $handler);
     }
 
     public function testBadJsonEncoding(): void
     {
-        $serverRequest = (new ServerRequestFactory())->createServerRequest('GET', '/badTest');
+        $serverRequest = $this->createStub(ServerRequestInterface::class);
 
         $resourceServer = $this->createMock(ResourceServer::class);
         $resourceServer
@@ -84,19 +92,28 @@ class ResourceServerMiddlewareTest extends TestCase
             ->with($serverRequest)
             ->willThrowException(new TokenApiException('Invalid token'));
 
-        $resourceServerMiddleware = new ResourceServerMiddleware($resourceServer, new ResponseFactory());
+        $response = $this->createMock(ResponseInterface::class);
+        $stream = $this->createMock(StreamInterface::class);
+        $responseFactory = $this->createMock(ResponseFactoryInterface::class);
+        $responseFactory
+            ->expects($this->once())
+            ->method('createResponse')
+            ->willReturn($response);
+        $response
+            ->expects($this->once())
+            ->method('getBody')
+            ->willReturn($stream);
+        $stream
+            ->expects($this->once())
+            ->method('write')
+            ->with('JSON encoding failed');
 
-        $handler = new class implements RequestHandlerInterface {
-            public function handle(ServerRequestInterface $request): ResponseInterface
-            {
-                return (new ResponseFactory())->createResponse();
-            }
-        };
+        $resourceServerMiddleware = new ResourceServerMiddleware($resourceServer, $responseFactory);
+
+        $handler = $this->createStub(RequestHandlerInterface::class);
 
         $GLOBALS['json_encode_false'] = true;
 
-        $response = $resourceServerMiddleware->process($serverRequest, $handler);
-
-        $this->assertSame('JSON encoding failed', (string) $response->getBody());
+        $resourceServerMiddleware->process($serverRequest, $handler);
     }
 }

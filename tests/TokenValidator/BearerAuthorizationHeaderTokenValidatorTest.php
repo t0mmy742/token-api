@@ -8,7 +8,6 @@ use Lcobucci\JWT\Configuration;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 use ReflectionClass;
-use Slim\Psr7\Factory\ServerRequestFactory;
 use T0mmy742\TokenAPI\Exception\AccessDeniedException;
 use T0mmy742\TokenAPI\Repository\AccessTokenRepositoryInterface;
 use T0mmy742\TokenAPI\TokenValidator\BearerAuthorizationHeaderTokenValidator;

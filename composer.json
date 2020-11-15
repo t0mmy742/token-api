@@ -30,7 +30,6 @@
         "phpstan/phpstan-phpunit": "^0.12.16",
         "phpstan/phpstan-strict-rules": "^0.12.5",
         "phpunit/phpunit": "^9.4",
-        "slim/psr7": "^1.2",
         "squizlabs/php_codesniffer": "^3.5",
         "t0mmy742/php-infection-streamwrapper": "^1.0",
         "thecodingmachine/phpstan-strict-rules": "^0.12.1"

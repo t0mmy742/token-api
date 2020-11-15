@@ -6,7 +6,6 @@ namespace T0mmy742\TokenAPI\Tests\TokenValidator;
 
 use DateInterval;
 use DateTimeImmutable;
-use DateTimeInterface;
 use Lcobucci\Jose\Parsing\Decoder;
 use Lcobucci\Jose\Parsing\Exception;
 use Lcobucci\JWT\Configuration;
@@ -15,11 +14,10 @@ use Lcobucci\JWT\Signer\Key;
 use Lcobucci\JWT\Signer\None;
 use Lcobucci\JWT\Signer\Rsa\Sha256;
 use Lcobucci\JWT\Token;
-use Lcobucci\JWT\Token\DataSet;
 use Lcobucci\JWT\Token\RegisteredClaims;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Slim\Psr7\Factory\ServerRequestFactory;
+use Psr\Http\Message\ServerRequestInterface;
 use T0mmy742\TokenAPI\Exception\AccessDeniedException;
 use T0mmy742\TokenAPI\Repository\AccessTokenRepositoryInterface;
 use T0mmy742\TokenAPI\TokenValidator\AbstractTokenValidator;
@@ -50,7 +48,12 @@ class AbstractTokenValidatorTest extends TestCase
 
     public function testValidToken(): void
     {
-        $serverRequest = (new ServerRequestFactory())->createServerRequest('GET', '/test');
+        $serverRequest = $this->createMock(ServerRequestInterface::class);
+        $serverRequest
+            ->expects($this->exactly(2))
+            ->method('withAttribute')
+            ->withConsecutive(['access_token_id', 'TOKEN_ID'], ['user_id', 'USER_ID'])
+            ->willReturn($serverRequest);
 
         $token = $this->jwtConfiguration->createBuilder()
             ->identifiedBy('TOKEN_ID')
@@ -71,15 +74,12 @@ class AbstractTokenValidatorTest extends TestCase
             ->with($token->claims()->get(RegisteredClaims::ID))
             ->willReturn(false);
 
-        $serverRequest = $this->abstractTokenValidator->validateToken($serverRequest);
-
-        $this->assertSame($serverRequest->getAttribute('access_token_id'), 'TOKEN_ID');
-        $this->assertSame($serverRequest->getAttribute('user_id'), 'USER_ID');
+        $this->abstractTokenValidator->validateToken($serverRequest);
     }
 
     public function testNotAToken(): void
     {
-        $serverRequest = (new ServerRequestFactory())->createServerRequest('GET', '/test');
+        $serverRequest = $this->createStub(ServerRequestInterface::class);
 
         $token = 'MY_BAD_TOKEN';
 
@@ -95,7 +95,7 @@ class AbstractTokenValidatorTest extends TestCase
 
     public function testBadJsonDecodingToken(): void
     {
-        $serverRequest = (new ServerRequestFactory())->createServerRequest('GET', '/test');
+        $serverRequest = $this->createStub(ServerRequestInterface::class);
 
         $token = $this->jwtConfiguration->createBuilder()
             ->identifiedBy('TOKEN_ID')
@@ -110,17 +110,11 @@ class AbstractTokenValidatorTest extends TestCase
             ->method('retrieveToken')
             ->willReturn((string) $token);
 
-        $this->jwtConfiguration->setDecoder(new class implements Decoder {
-            public function jsonDecode(string $json)
-            {
-                throw new Exception();
-            }
-
-            public function base64UrlDecode(string $data): string
-            {
-                return '';
-            }
-        });
+        $decoder = $this->createStub(Decoder::class);
+        $decoder
+            ->method('jsonDecode')
+            ->willThrowException(new Exception());
+        $this->jwtConfiguration->setDecoder($decoder);
 
         $this->expectException(AccessDeniedException::class);
         $this->expectExceptionMessage('Error while decoding from JSON');
@@ -130,7 +124,7 @@ class AbstractTokenValidatorTest extends TestCase
 
     public function testBadParsingToken(): void
     {
-        $serverRequest = (new ServerRequestFactory())->createServerRequest('GET', '/test');
+        $serverRequest = $this->createStub(ServerRequestInterface::class);
 
         $token = $this->jwtConfiguration->createBuilder()
             ->identifiedBy('TOKEN_ID')
@@ -145,57 +139,11 @@ class AbstractTokenValidatorTest extends TestCase
             ->method('retrieveToken')
             ->willReturn((string) $token);
 
-        $this->jwtConfiguration->setParser(new class implements Parser {
-            public function parse(string $jwt): Token
-            {
-                return new class implements Token {
-                    public function headers(): DataSet
-                    {
-                        return new DataSet([], '');
-                    }
-
-                    public function isPermittedFor(string $audience): bool
-                    {
-                        return true;
-                    }
-
-                    public function isIdentifiedBy(string $id): bool
-                    {
-                        return true;
-                    }
-
-                    public function isRelatedTo(string $subject): bool
-                    {
-                        return true;
-                    }
-
-                    public function hasBeenIssuedBy(string ...$issuers): bool
-                    {
-                        return true;
-                    }
-
-                    public function hasBeenIssuedBefore(DateTimeInterface $now): bool
-                    {
-                        return true;
-                    }
-
-                    public function isMinimumTimeBefore(DateTimeInterface $now): bool
-                    {
-                        return true;
-                    }
-
-                    public function isExpired(DateTimeInterface $now): bool
-                    {
-                        return true;
-                    }
-
-                    public function __toString(): string
-                    {
-                        return '';
-                    }
-                };
-            }
-        });
+        $parser = $this->createStub(Parser::class);
+        $parser
+            ->method('parse')
+            ->willReturn($this->createStub(Token::class));
+        $this->jwtConfiguration->setParser($parser);
 
         $this->expectException(AccessDeniedException::class);
         $this->expectExceptionMessage('Error while parsing access token');
@@ -204,7 +152,7 @@ class AbstractTokenValidatorTest extends TestCase
 
     public function testBadSignerToken(): void
     {
-        $serverRequest = (new ServerRequestFactory())->createServerRequest('GET', '/test');
+        $serverRequest = $this->createStub(ServerRequestInterface::class);
 
         $token = $this->jwtConfiguration->createBuilder()
             ->identifiedBy('TOKEN_ID')
@@ -226,7 +174,7 @@ class AbstractTokenValidatorTest extends TestCase
 
     public function testExpiredToken(): void
     {
-        $serverRequest = (new ServerRequestFactory())->createServerRequest('GET', '/test');
+        $serverRequest = $this->createStub(ServerRequestInterface::class);
 
         $token = $this->jwtConfiguration->createBuilder()
             ->identifiedBy('TOKEN_ID')
@@ -248,7 +196,7 @@ class AbstractTokenValidatorTest extends TestCase
 
     public function testRevokedToken(): void
     {
-        $serverRequest = (new ServerRequestFactory())->createServerRequest('GET', '/test');
+        $serverRequest = $this->createStub(ServerRequestInterface::class);
 
         $token = $this->jwtConfiguration->createBuilder()
             ->identifiedBy('TOKEN_ID')

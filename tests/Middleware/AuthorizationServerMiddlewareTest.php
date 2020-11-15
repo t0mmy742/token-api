@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace T0mmy742\TokenAPI\Tests\Middleware;
 
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\StreamInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use Slim\Psr7\Factory\ResponseFactory;
-use Slim\Psr7\Factory\ServerRequestFactory;
 use T0mmy742\TokenAPI\AuthorizationServer;
 use T0mmy742\TokenAPI\Exception\TokenApiException;
 use T0mmy742\TokenAPI\Middleware\AuthorizationServerMiddleware;
@@ -20,8 +20,9 @@ class AuthorizationServerMiddlewareTest extends TestCase
 {
     public function testReturnToken(): void
     {
-        $serverRequest = (new ServerRequestFactory())->createServerRequest('POST', '/access_token');
-        $response = (new ResponseFactory())->createResponse();
+        $serverRequest = $this->createStub(ServerRequestInterface::class);
+        $response = $this->createStub(ResponseInterface::class);
+        $responseFactory = $this->createStub(ResponseFactoryInterface::class);
 
         $authorizationServer = $this->createMock(AuthorizationServer::class);
         $authorizationServer
@@ -30,31 +31,23 @@ class AuthorizationServerMiddlewareTest extends TestCase
             ->with($serverRequest, $this->isInstanceOf(ResponseInterface::class))
             ->willReturn($response);
 
-        $authorizationServerMiddleware = new AuthorizationServerMiddleware($authorizationServer, new ResponseFactory());
+        $authorizationServerMiddleware = new AuthorizationServerMiddleware($authorizationServer, $responseFactory);
 
-        $handler = new class ($response) implements RequestHandlerInterface {
-            private ResponseInterface $response;
-
-            public function __construct(ResponseInterface $response)
-            {
-                $this->response = $response;
-            }
-
-            public function handle(ServerRequestInterface $request): ResponseInterface
-            {
-                return $this->response;
-            }
-        };
+        $handler = $this->createMock(RequestHandlerInterface::class);
+        $handler
+            ->expects($this->once())
+            ->method('handle')
+            ->with($serverRequest)
+            ->willReturn($response);
 
         $responseResult = $authorizationServerMiddleware->process($serverRequest, $handler);
 
-        $this->assertSame(200, $response->getStatusCode());
         $this->assertSame($responseResult, $response);
     }
 
     public function testBadReturnToken(): void
     {
-        $serverRequest = (new ServerRequestFactory())->createServerRequest('POST', '/access_token');
+        $serverRequest = $this->createStub(ServerRequestInterface::class);
 
         $authorizationServer = $this->createMock(AuthorizationServer::class);
         $authorizationServer
@@ -63,23 +56,32 @@ class AuthorizationServerMiddlewareTest extends TestCase
             ->with($serverRequest, $this->isInstanceOf(ResponseInterface::class))
             ->willThrowException(new TokenApiException('Invalid token'));
 
-        $authorizationServerMiddleware = new AuthorizationServerMiddleware($authorizationServer, new ResponseFactory());
+        $response = $this->createMock(ResponseInterface::class);
+        $stream = $this->createMock(StreamInterface::class);
+        $responseFactory = $this->createMock(ResponseFactoryInterface::class);
+        $responseFactory
+            ->expects($this->once())
+            ->method('createResponse')
+            ->willReturn($response);
+        $response
+            ->expects($this->once())
+            ->method('getBody')
+            ->willReturn($stream);
+        $stream
+            ->expects($this->once())
+            ->method('write')
+            ->with(json_encode(['error' => 'Invalid token']));
 
-        $handler = new class implements RequestHandlerInterface {
-            public function handle(ServerRequestInterface $request): ResponseInterface
-            {
-                return (new ResponseFactory())->createResponse();
-            }
-        };
+        $authorizationServerMiddleware = new AuthorizationServerMiddleware($authorizationServer, $responseFactory);
 
-        $response = $authorizationServerMiddleware->process($serverRequest, $handler);
+        $handler = $this->createStub(RequestHandlerInterface::class);
 
-        $this->assertSame(json_encode(['error' => 'Invalid token']), (string) $response->getBody());
+        $authorizationServerMiddleware->process($serverRequest, $handler);
     }
 
     public function testBadJsonEncoding(): void
     {
-        $serverRequest = (new ServerRequestFactory())->createServerRequest('POST', '/access_token');
+        $serverRequest = $this->createStub(ServerRequestInterface::class);
 
         $authorizationServer = $this->createMock(AuthorizationServer::class);
         $authorizationServer
@@ -88,19 +90,28 @@ class AuthorizationServerMiddlewareTest extends TestCase
             ->with($serverRequest, $this->isInstanceOf(ResponseInterface::class))
             ->willThrowException(new TokenApiException('Invalid token'));
 
-        $authorizationServerMiddleware = new AuthorizationServerMiddleware($authorizationServer, new ResponseFactory());
+        $response = $this->createMock(ResponseInterface::class);
+        $stream = $this->createMock(StreamInterface::class);
+        $responseFactory = $this->createMock(ResponseFactoryInterface::class);
+        $responseFactory
+            ->expects($this->once())
+            ->method('createResponse')
+            ->willReturn($response);
+        $response
+            ->expects($this->once())
+            ->method('getBody')
+            ->willReturn($stream);
+        $stream
+            ->expects($this->once())
+            ->method('write')
+            ->with('JSON encoding failed');
 
-        $handler = new class implements RequestHandlerInterface {
-            public function handle(ServerRequestInterface $request): ResponseInterface
-            {
-                return (new ResponseFactory())->createResponse();
-            }
-        };
+        $authorizationServerMiddleware = new AuthorizationServerMiddleware($authorizationServer, $responseFactory);
+
+        $handler = $this->createStub(RequestHandlerInterface::class);
 
         $GLOBALS['json_encode_false'] = true;
 
-        $response = $authorizationServerMiddleware->process($serverRequest, $handler);
-
-        $this->assertSame('JSON encoding failed', (string) $response->getBody());
+        $authorizationServerMiddleware->process($serverRequest, $handler);
     }
 }

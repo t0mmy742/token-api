@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace T0mmy742\TokenAPI\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Slim\Psr7\Factory\ResponseFactory;
-use Slim\Psr7\Factory\ServerRequestFactory;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use T0mmy742\TokenAPI\AuthorizationServer;
 use T0mmy742\TokenAPI\TokenGeneration\TokenGenerationInterface;
 
@@ -14,8 +14,8 @@ class AuthorizationServerTest extends TestCase
 {
     public function testAuthorizationServer(): void
     {
-        $serverRequest = (new ServerRequestFactory())->createServerRequest('POST', '/token');
-        $response = (new ResponseFactory())->createResponse();
+        $serverRequest = $this->createStub(ServerRequestInterface::class);
+        $response = $this->createStub(ResponseInterface::class);
 
         $tokenGeneration = $this->createMock(TokenGenerationInterface::class);
         $tokenGeneration

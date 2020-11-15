@@ -13,8 +13,8 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\StreamInterface;
 use ReflectionClass;
-use Slim\Psr7\Factory\ResponseFactory;
 use T0mmy742\TokenAPI\Crypt\CryptInterface;
 use T0mmy742\TokenAPI\Entities\AccessTokenEntityInterface;
 use T0mmy742\TokenAPI\Entities\RefreshTokenEntityInterface;
@@ -34,6 +34,7 @@ use T0mmy742\TokenAPI\TokenGeneration\TokenGeneration;
 
 use function json_decode;
 use function json_encode;
+use function strlen;
 use function time;
 
 class TokenGenerationTest extends TestCase
@@ -224,27 +225,49 @@ class TokenGenerationTest extends TestCase
             ->with($this->isType('string'))
             ->willReturnArgument(0);
 
+        $response = $this->createMock(ResponseInterface::class);
+        $stream = $this->createMock(StreamInterface::class);
+        $response
+            ->expects($this->once())
+            ->method('withStatus')
+            ->with(200)
+            ->willReturn($response);
+        $response
+            ->expects($this->exactly(3))
+            ->method('withHeader')
+            ->withConsecutive(
+                ['pragma', 'no-cache'],
+                ['cache-control', 'no-store'],
+                ['content-type', 'application/json; charset=UTF-8']
+            )
+            ->willReturn($response);
+        $response
+            ->expects($this->once())
+            ->method('getBody')
+            ->willReturn($stream);
+        $stream
+            ->expects($this->once())
+            ->method('write')
+            ->with($this->isType('string'))
+            ->willReturnCallback(
+                function (string $string) use ($accessTokenExpiryDateTime, $refreshTokenExpiryDateTime): int {
+                    $responseData = json_decode($string, true);
+                    $this->assertSame('Bearer', $responseData['token_type']);
+                    $this->assertSame($accessTokenExpiryDateTime->getTimestamp() - 10, $responseData['expires_in']);
+                    $this->assertIsString($responseData['access_token']);
+                    $refreshTokenDecoded = json_decode($responseData['refresh_token'], true);
+                    $this->assertSame('REFRESH_TOKEN_ID', $refreshTokenDecoded['refresh_token_id']);
+                    $this->assertSame('ACCESS_TOKEN_ID', $refreshTokenDecoded['access_token_id']);
+                    $this->assertSame('USER_ID', $refreshTokenDecoded['user_id']);
+                    $this->assertSame($refreshTokenExpiryDateTime->getTimestamp(), $refreshTokenDecoded['expire_time']);
+
+                    return strlen($string);
+                }
+            );
+
         $GLOBALS['time_10'] = true;
 
-        /** @var ResponseInterface $responseResult */
-        $responseResult = $method->invoke(
-            $this->tokenGeneration,
-            (new ResponseFactory())->createResponse(),
-            $accessToken,
-            $refreshToken
-        );
-
-        $this->assertSame(200, $responseResult->getStatusCode());
-
-        $responseData = json_decode((string) $responseResult->getBody(), true);
-        $this->assertSame('Bearer', $responseData['token_type']);
-        $this->assertSame($accessTokenExpiryDateTime->getTimestamp() - 10, $responseData['expires_in']);
-        $this->assertIsString($responseData['access_token']);
-        $refreshTokenDecoded = json_decode($responseData['refresh_token'], true);
-        $this->assertSame('REFRESH_TOKEN_ID', $refreshTokenDecoded['refresh_token_id']);
-        $this->assertSame('ACCESS_TOKEN_ID', $refreshTokenDecoded['access_token_id']);
-        $this->assertSame('USER_ID', $refreshTokenDecoded['user_id']);
-        $this->assertSame($refreshTokenExpiryDateTime->getTimestamp(), $refreshTokenDecoded['expire_time']);
+        $method->invoke($this->tokenGeneration, $response, $accessToken, $refreshToken);
     }
 
     public function testGoodGenerateHttpResponseWithoutRefreshToken(): void
@@ -260,15 +283,32 @@ class TokenGenerationTest extends TestCase
         $accessToken->setJwtConfiguration($this->jwtConfiguration);
         $accessToken->setIdentifier('ACCESS_TOKEN_ID');
 
-        /** @var ResponseInterface $responseResult */
-        $responseResult = $method->invoke(
-            $this->tokenGeneration,
-            (new ResponseFactory())->createResponse(),
-            $accessToken,
-            null
-        );
+        $response = $this->createMock(ResponseInterface::class);
+        $stream = $this->createMock(StreamInterface::class);
+        $response
+            ->expects($this->once())
+            ->method('withStatus')
+            ->with(200)
+            ->willReturn($response);
+        $response
+            ->expects($this->exactly(3))
+            ->method('withHeader')
+            ->withConsecutive(
+                ['pragma', 'no-cache'],
+                ['cache-control', 'no-store'],
+                ['content-type', 'application/json; charset=UTF-8']
+            )
+            ->willReturn($response);
+        $response
+            ->expects($this->once())
+            ->method('getBody')
+            ->willReturn($stream);
+        $stream
+            ->expects($this->once())
+            ->method('write')
+            ->with($this->isType('string'));
 
-        $this->assertSame(200, $responseResult->getStatusCode());
+        $method->invoke($this->tokenGeneration, $response, $accessToken, null);
     }
 
     public function testJsonErrorRefreshTokenPayloadGenerateHttpResponse(): void
@@ -288,11 +328,13 @@ class TokenGenerationTest extends TestCase
         $refreshToken->setAccessToken($accessToken);
         $refreshToken->setIdentifier('REFRESH_TOKEN_ID');
 
+        $response = $this->createStub(ResponseInterface::class);
+
         $GLOBALS['json_encode_false'] = true;
 
         $this->expectException(JsonEncodingException::class);
         $this->expectExceptionMessage('Error while JSON encoding the refresh token payload');
-        $method->invoke($this->tokenGeneration, (new ResponseFactory())->createResponse(), $accessToken, $refreshToken);
+        $method->invoke($this->tokenGeneration, $response, $accessToken, $refreshToken);
     }
 
     public function testJsonErrorResponseParametersGenerateHttpResponse(): void
@@ -307,11 +349,13 @@ class TokenGenerationTest extends TestCase
         $accessToken->setJwtConfiguration($this->jwtConfiguration);
         $accessToken->setIdentifier('ACCESS_TOKEN_ID');
 
+        $response = $this->createStub(ResponseInterface::class);
+
         $GLOBALS['json_encode_false'] = true;
 
         $this->expectException(JsonEncodingException::class);
         $this->expectExceptionMessage('Error while JSON encoding response parameters');
-        $method->invoke($this->tokenGeneration, (new ResponseFactory())->createResponse(), $accessToken, null);
+        $method->invoke($this->tokenGeneration, $response, $accessToken, null);
     }
 
     public function testValidRespondToTokenRequest(): void
@@ -363,11 +407,32 @@ class TokenGenerationTest extends TestCase
             ->with($this->isType('string'))
             ->willReturn('ENCRYPTED_REFRESH_TOKEN');
 
-        $responseResult = $this->tokenGeneration->respondToTokenRequest(
-            $serverRequest,
-            (new ResponseFactory())->createResponse()
-        );
-        $this->assertSame(200, $responseResult->getStatusCode());
+        $response = $this->createMock(ResponseInterface::class);
+        $stream = $this->createMock(StreamInterface::class);
+        $response
+            ->expects($this->once())
+            ->method('withStatus')
+            ->with(200)
+            ->willReturn($response);
+        $response
+            ->expects($this->exactly(3))
+            ->method('withHeader')
+            ->withConsecutive(
+                ['pragma', 'no-cache'],
+                ['cache-control', 'no-store'],
+                ['content-type', 'application/json; charset=UTF-8']
+            )
+            ->willReturn($response);
+        $response
+            ->expects($this->once())
+            ->method('getBody')
+            ->willReturn($stream);
+        $stream
+            ->expects($this->once())
+            ->method('write')
+            ->with($this->isType('string'));
+
+        $this->tokenGeneration->respondToTokenRequest($serverRequest, $response);
     }
 
     public function testNoUsername(): void
@@ -378,9 +443,11 @@ class TokenGenerationTest extends TestCase
             ->method('getParsedBody')
             ->willReturn(null);
 
+        $response = $this->createStub(ResponseInterface::class);
+
         $this->expectException(InvalidRequestException::class);
         $this->expectExceptionMessage('username');
-        $this->tokenGeneration->respondToTokenRequest($serverRequest, (new ResponseFactory())->createResponse());
+        $this->tokenGeneration->respondToTokenRequest($serverRequest, $response);
     }
 
     public function testNoPassword(): void
@@ -394,9 +461,11 @@ class TokenGenerationTest extends TestCase
             ->method('getParsedBody')
             ->willReturn($parsedBody);
 
+        $response = $this->createStub(ResponseInterface::class);
+
         $this->expectException(InvalidRequestException::class);
         $this->expectExceptionMessage('password');
-        $this->tokenGeneration->respondToTokenRequest($serverRequest, (new ResponseFactory())->createResponse());
+        $this->tokenGeneration->respondToTokenRequest($serverRequest, $response);
     }
 
     public function testBadIdentification(): void
@@ -417,9 +486,11 @@ class TokenGenerationTest extends TestCase
             ->with('admin', 'pass')
             ->willReturn(null);
 
+        $response = $this->createStub(ResponseInterface::class);
+
         $this->expectException(InvalidRequestException::class);
         $this->expectExceptionMessage('Invalid identification');
-        $this->tokenGeneration->respondToTokenRequest($serverRequest, (new ResponseFactory())->createResponse());
+        $this->tokenGeneration->respondToTokenRequest($serverRequest, $response);
     }
 
     public function testValidRespondToTokenRequestWithRefreshToken(): void
@@ -491,11 +562,32 @@ class TokenGenerationTest extends TestCase
             ->with($this->isType('string'))
             ->willReturn('ENCRYPTED_REFRESH_TOKEN');
 
-        $responseResult = $this->tokenGeneration->respondToTokenRequest(
-            $serverRequest,
-            (new ResponseFactory())->createResponse()
-        );
-        $this->assertSame(200, $responseResult->getStatusCode());
+        $response = $this->createMock(ResponseInterface::class);
+        $stream = $this->createMock(StreamInterface::class);
+        $response
+            ->expects($this->once())
+            ->method('withStatus')
+            ->with(200)
+            ->willReturn($response);
+        $response
+            ->expects($this->exactly(3))
+            ->method('withHeader')
+            ->withConsecutive(
+                ['pragma', 'no-cache'],
+                ['cache-control', 'no-store'],
+                ['content-type', 'application/json; charset=UTF-8']
+            )
+            ->willReturn($response);
+        $response
+            ->expects($this->once())
+            ->method('getBody')
+            ->willReturn($stream);
+        $stream
+            ->expects($this->once())
+            ->method('write')
+            ->with($this->isType('string'));
+
+        $this->tokenGeneration->respondToTokenRequest($serverRequest, $response);
     }
 
     public function testBadEncryptionRefreshToken(): void
@@ -515,10 +607,12 @@ class TokenGenerationTest extends TestCase
             ->with('BAD_REFRESH_TOKEN')
             ->willThrowException(new EncryptionException());
 
+        $response = $this->createStub(ResponseInterface::class);
+
         $this->expectException(InvalidRefreshTokenException::class);
         $this->expectExceptionMessage('Cannot decrypt the refresh token');
         $this->expectExceptionCode(0);
-        $this->tokenGeneration->respondToTokenRequest($serverRequest, (new ResponseFactory())->createResponse());
+        $this->tokenGeneration->respondToTokenRequest($serverRequest, $response);
     }
 
     public function testExpiredRefreshToken(): void
@@ -544,9 +638,11 @@ class TokenGenerationTest extends TestCase
             ->with('REFRESH_TOKEN')
             ->willReturn($refreshTokenPayload);
 
+        $response = $this->createStub(ResponseInterface::class);
+
         $this->expectException(InvalidRefreshTokenException::class);
         $this->expectExceptionMessage('Token has expired');
-        $this->tokenGeneration->respondToTokenRequest($serverRequest, (new ResponseFactory())->createResponse());
+        $this->tokenGeneration->respondToTokenRequest($serverRequest, $response);
     }
 
     public function testRevokedRefreshToken(): void
@@ -579,8 +675,10 @@ class TokenGenerationTest extends TestCase
             ->with('REFRESH_TOKEN_ID')
             ->willReturn(true);
 
+        $response = $this->createStub(ResponseInterface::class);
+
         $this->expectException(InvalidRefreshTokenException::class);
         $this->expectExceptionMessage('Token has been revoked');
-        $this->tokenGeneration->respondToTokenRequest($serverRequest, (new ResponseFactory())->createResponse());
+        $this->tokenGeneration->respondToTokenRequest($serverRequest, $response);
     }
 }

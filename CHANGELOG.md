@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Delete
 - Remove Prophecy `phpspec/prophecy` usage for testing
 - Remove `defuse/php-encryption` support (only Sodium library used)
+- Remove PSR-7 implementation (`slim/psr7`) for testing (test only with Mock)
 
 ## [1.0.0] - 2020-10-12
 ### Added
