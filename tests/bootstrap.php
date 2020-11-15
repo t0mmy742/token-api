@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use AdrianSuter\Autoload\Override\Override;
 use Composer\Autoload\ClassLoader;
-use Defuse\Crypto\Core;
 use t0mmy742\StreamWrapper\StreamWrapper;
 use T0mmy742\TokenAPI\Crypt\SodiumCrypt;
 use T0mmy742\TokenAPI\Middleware\AuthorizationServerMiddleware;
@@ -36,16 +35,6 @@ Override::apply($classLoader, [
             return preg_replace($pattern, $replacement, $subject, $limit, $count);
         }
     ],
-    Core::class => [
-        'random_bytes' => function (int $length): string {
-            if (isset($GLOBALS['crypto_defuse_exception'])) {
-                unset($GLOBALS['crypto_defuse_exception']);
-                throw new RuntimeException();
-            }
-
-            return random_bytes($length);
-        }
-    ],
     ResourceServerMiddleware::class => [
         'json_encode' => function ($value) {
             if (isset($GLOBALS['json_encode_false'])) {
@@ -57,13 +46,13 @@ Override::apply($classLoader, [
         }
     ],
     SodiumCrypt::class => [
-        'base64_decode' => function (string $data, bool $strict = null) {
+        'base64_decode' => function (string $data) {
             if (isset($GLOBALS['base64_decode_false'])) {
                 unset($GLOBALS['base64_decode_false']);
                 return false;
             }
 
-            return base64_decode($data, $strict);
+            return base64_decode($data, true);
         },
         'file_exists' => function (string $filename): bool {
             if (isset($GLOBALS['file_exists'])) {
@@ -106,7 +95,7 @@ Override::apply($classLoader, [
 
             return is_readable($filename);
         },
-        'mb_strlen' => function (string $str, string $encoding = null): int {
+        'mb_strlen' => function (string $str, $encoding = null) {
             if (isset($GLOBALS['mb_strlen'])) {
                 unset($GLOBALS['mb_strlen']);
                 return 0;

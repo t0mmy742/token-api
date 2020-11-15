@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Defuse\Crypto\Key as CryptoKey;
 use DI\Container;
 use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Signer\Key;
@@ -11,7 +10,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Factory\AppFactory;
 use T0mmy742\TokenAPI\AuthorizationServer;
-use T0mmy742\TokenAPI\Crypt\Crypt;
+use T0mmy742\TokenAPI\Crypt\SodiumCrypt;
 use T0mmy742\TokenAPI\Middleware\AuthorizationServerMiddleware;
 use T0mmy742\TokenAPI\Middleware\ResourceServerMiddleware;
 use T0mmy742\TokenAPI\ResourceServer;
@@ -29,8 +28,7 @@ $container->set(AuthorizationServer::class, function () {
         new AccessTokenRepository(),
         new RefreshTokenRepository(),
         new UserRepository(),
-        new Crypt(CryptoKey::loadFromAsciiSafeString('def000001bffc7df14056517020ebc56829102ec3411906b08fea9f99e4a2e' .
-            '5593bcbcf53b5016849b545ceba1e9f52157913832e6f3f2e89a3e402a66070cff9e2aaa60')),
+        new SodiumCrypt('PATH_TO_KEYFILE_PREVIOUSLY_GENERATED'),
         new DateInterval('PT1H'),
         new DateInterval('P1M'),
         Configuration::forAsymmetricSigner(
