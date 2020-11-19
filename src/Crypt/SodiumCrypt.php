@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace T0mmy742\TokenAPI\Crypt;
 
+use Exception;
+use SodiumException;
 use T0mmy742\TokenAPI\Exception\EncryptionException;
 
 use function base64_decode;
@@ -42,12 +44,24 @@ class SodiumCrypt implements CryptInterface
             throw new EncryptionException('Key is not the correct size (must be 32 bytes).');
         }
 
-        $nonce = random_bytes(SODIUM_CRYPTO_SECRETBOX_NONCEBYTES);
+        try {
+            $nonce = random_bytes(SODIUM_CRYPTO_SECRETBOX_NONCEBYTES);
+        } catch (Exception $e) {
+            throw new EncryptionException('Cannot generate random bytes', 0, $e);
+        }
 
-        $ciphertext = base64_encode($nonce . sodium_crypto_secretbox($unencryptedData, $nonce, $key));
+        try {
+            $ciphertext = base64_encode($nonce . sodium_crypto_secretbox($unencryptedData, $nonce, $key));
+        } catch (SodiumException $e) {
+            throw new EncryptionException('Error while encrypting text', 0, $e);
+        }
 
-        sodium_memzero($unencryptedData);
-        sodium_memzero($key);
+        try {
+            sodium_memzero($unencryptedData);
+            sodium_memzero($key);
+        } catch (SodiumException $e) {
+            throw new EncryptionException('Error while cleaning memory', 0, $e);
+        }
 
         return $ciphertext;
     }
@@ -63,21 +77,30 @@ class SodiumCrypt implements CryptInterface
         $nonce = mb_substr($decoded, 0, SODIUM_CRYPTO_SECRETBOX_NONCEBYTES, '8bit');
         $ciphertext = mb_substr($decoded, SODIUM_CRYPTO_SECRETBOX_NONCEBYTES, null, '8bit');
 
-        $plaintext = sodium_crypto_secretbox_open($ciphertext, $nonce, $key);
+        try {
+            $plaintext = sodium_crypto_secretbox_open($ciphertext, $nonce, $key);
+        } catch (SodiumException $e) {
+            throw new EncryptionException('Error while decrypting text', 0, $e);
+        }
 
         if ($plaintext === false) {
             throw new EncryptionException('Bad ciphertext');
         }
 
-        sodium_memzero($ciphertext);
-        sodium_memzero($nonce);
-        sodium_memzero($key);
+        try {
+            sodium_memzero($ciphertext);
+            sodium_memzero($nonce);
+            sodium_memzero($key);
+        } catch (SodiumException $e) {
+            throw new EncryptionException('Error while cleaning memory', 0, $e);
+        }
 
         return $plaintext;
     }
 
     /**
      * @param bool $overwrite
+     * @return bool
      * @throws EncryptionException
      */
     public function generateSaveKey(bool $overwrite = false): bool
@@ -86,9 +109,17 @@ class SodiumCrypt implements CryptInterface
             throw new EncryptionException('Key file already exists. Use `overwrite` parameter to create a new file');
         }
 
-        $key = sodium_bin2hex(sodium_crypto_secretbox_keygen());
+        try {
+            $key = sodium_bin2hex(sodium_crypto_secretbox_keygen());
+        } catch (SodiumException $e) {
+            throw new EncryptionException('Error while converting binary key to hexadecimal', 0, $e);
+        }
         file_put_contents($this->keyPath, $key);
-        sodium_memzero($key);
+        try {
+            sodium_memzero($key);
+        } catch (SodiumException $e) {
+            throw new EncryptionException('Error while cleaning memory', 0, $e);
+        }
 
         return true;
     }
@@ -108,8 +139,16 @@ class SodiumCrypt implements CryptInterface
             throw new EncryptionException('Cannot load key from file');
         }
 
-        $key = sodium_hex2bin($keyFileData);
-        sodium_memzero($keyFileData);
+        try {
+            $key = sodium_hex2bin($keyFileData);
+        } catch (SodiumException $e) {
+            throw new EncryptionException('Error while converting hexadecimal key to binary', 0, $e);
+        }
+        try {
+            sodium_memzero($keyFileData);
+        } catch (SodiumException $e) {
+            throw new EncryptionException('Error while cleaning memory', 0, $e);
+        }
 
         return $key;
     }

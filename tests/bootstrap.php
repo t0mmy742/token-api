@@ -103,13 +103,67 @@ Override::apply($classLoader, [
 
             return mb_strlen($str, $encoding);
         },
+        'random_bytes' => function (int $length): string {
+            if (isset($GLOBALS['random_bytes_exception'])) {
+                unset($GLOBALS['random_bytes_exception']);
+                throw new RuntimeException();
+            }
+
+            return random_bytes($length);
+        },
+        'sodium_bin2hex' => function (string $binary): string {
+            if (isset($GLOBALS['sodium_bin2hex_failed'])) {
+                unset($GLOBALS['sodium_bin2hex_failed']);
+                throw new SodiumException();
+            }
+
+            return sodium_bin2hex($binary);
+        },
+        'sodium_crypto_secretbox' => function (string $plaintext, string $nonce, string $key): string {
+            if (isset($GLOBALS['sodium_crypto_secretbox_failed'])) {
+                unset($GLOBALS['sodium_crypto_secretbox_failed']);
+                throw new SodiumException();
+            }
+
+            return sodium_crypto_secretbox($plaintext, $nonce, $key);
+        },
         'sodium_crypto_secretbox_open' => function (string $ciphertext, string $nonce, string $key) {
             if (isset($GLOBALS['sodium_crypto_secretbox_open_false'])) {
                 unset($GLOBALS['sodium_crypto_secretbox_open_false']);
                 return false;
+            } elseif (isset($GLOBALS['sodium_crypto_secretbox_open_exception'])) {
+                unset($GLOBALS['sodium_crypto_secretbox_open_exception']);
+                throw new SodiumException();
             }
 
             return sodium_crypto_secretbox_open($ciphertext, $nonce, $key);
+        },
+        'sodium_hex2bin' => function (string $hex): string {
+            if (isset($GLOBALS['sodium_hex2bin_failed'])) {
+                unset($GLOBALS['sodium_hex2bin_failed']);
+                throw new SodiumException();
+            }
+
+            return sodium_hex2bin($hex);
+        },
+        'sodium_memzero' => function (string $buf): void {
+            if (isset($GLOBALS['sodium_memzero_failed'])) {
+                unset($GLOBALS['sodium_memzero_failed']);
+                throw new SodiumException();
+            } elseif (isset($GLOBALS['sodium_memzero_failed_2'])) {
+                if (
+                    isset($GLOBALS['sodium_memzero_failed_2_counter'])
+                    && ++$GLOBALS['sodium_memzero_failed_2_counter'] === 2
+                ) {
+                    unset($GLOBALS['sodium_memzero_failed_2']);
+                    unset($GLOBALS['sodium_memzero_failed_2_counter']);
+                    throw new SodiumException();
+                } else {
+                    $GLOBALS['sodium_memzero_failed_2_counter'] = 1;
+                }
+            }
+
+            sodium_memzero($buf);
         }
     ],
     TokenGeneration::class => [
