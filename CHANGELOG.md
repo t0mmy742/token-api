@@ -13,8 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Remove `Crypt` trait and use `CryptInterface`
 - Updated tests
+- GitHub Actions replaced Travis CI
 
-### Delete
+### Removed
 - Remove Prophecy `phpspec/prophecy` usage for testing
 - Remove `defuse/php-encryption` support (only Sodium library used)
 - Remove PSR-7 implementation (`slim/psr7`) for testing (test only with Mock)

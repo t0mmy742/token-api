@@ -1,6 +1,6 @@
 # Token API
 
-[![Build Status](https://travis-ci.com/t0mmy742/token-api.svg?branch=master)](https://travis-ci.com/t0mmy742/token-api)
+![Tests](https://github.com/t0mmy742/token-api/workflows/Tests/badge.svg?branch=master)
 [![Coverage Status](https://coveralls.io/repos/github/t0mmy742/token-api/badge.svg?branch=master)](https://coveralls.io/github/t0mmy742/token-api?branch=master)
 
 `t0mmy742/token-api` is a token manager used for securing an API.
