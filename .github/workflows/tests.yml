@@ -34,12 +34,17 @@ jobs:
       - name: Install dependencies
         run: composer install --no-progress --prefer-dist --optimize-autoloader
 
-      - name: Run test suite
-        run: |
-          vendor/bin/phpunit --coverage-text --coverage-clover build/logs/clover.xml --coverage-xml=build/coverage/coverage-xml --log-junit=build/coverage/junit.xml
-          vendor/bin/phpcs
-          vendor/bin/phpstan analyse
-          vendor/bin/infection -s --threads=4 --coverage=build/coverage
+      - name: Conding standard
+        run: vendor/bin/phpcs
+
+      - name: Static analysis
+        run: vendor/bin/phpstan analyse
+
+      - name: Tests
+        run: vendor/bin/phpunit --coverage-text --coverage-clover build/logs/clover.xml --coverage-xml=build/coverage/coverage-xml --log-junit=build/coverage/junit.xml
+
+      - name: Infection
+        run: vendor/bin/infection -s --threads=4 --coverage=build/coverage
 
       - name: Upload coverage results to Coveralls
         env:
