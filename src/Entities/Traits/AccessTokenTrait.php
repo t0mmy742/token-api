@@ -81,7 +81,7 @@ trait AccessTokenTrait
      */
     public function __toString(): string
     {
-        return (string) $this->convertToJWT();
+        return $this->convertToJWT()->toString();
     }
 
     /**
@@ -92,12 +92,12 @@ trait AccessTokenTrait
     private function convertToJWT(): Token
     {
         return $this->jwtConfiguration
-            ->createBuilder()
+            ->builder()
             ->identifiedBy($this->getIdentifier())
             ->issuedAt(new DateTimeImmutable('@' . time()))
             ->canOnlyBeUsedAfter(new DateTimeImmutable('@' . time()))
             ->expiresAt($this->getExpiryDateTime())
             ->relatedTo($this->getUserIdentifier())
-            ->getToken($this->jwtConfiguration->getSigner(), $this->jwtConfiguration->getSigningKey());
+            ->getToken($this->jwtConfiguration->signer(), $this->jwtConfiguration->signingKey());
     }
 }

@@ -35,7 +35,7 @@ abstract class AbstractTokenValidator implements TokenValidatorInterface
         $jwt = $this->retrieveToken($request);
 
         try {
-            $token = $this->jwtConfiguration->getParser()->parse($jwt);
+            $token = $this->jwtConfiguration->parser()->parse($jwt);
         } catch (InvalidArgumentException $e) {
             throw new AccessDeniedException($e->getMessage(), 0, $e);
         } catch (RuntimeException $e) {
@@ -47,16 +47,16 @@ abstract class AbstractTokenValidator implements TokenValidatorInterface
         }
 
         if (
-            $this->jwtConfiguration->getValidator()->validate($token, new SignedWith(
-                $this->jwtConfiguration->getSigner(),
-                $this->jwtConfiguration->getVerificationKey()
+            $this->jwtConfiguration->validator()->validate($token, new SignedWith(
+                $this->jwtConfiguration->signer(),
+                $this->jwtConfiguration->verificationKey()
             )) === false
         ) {
             throw new AccessDeniedException('Access token could not be verified');
         }
 
         if (
-            $this->jwtConfiguration->getValidator()->validate($token, new ValidAt(
+            $this->jwtConfiguration->validator()->validate($token, new ValidAt(
                 new FrozenClock(new DateTimeImmutable('@' . time()))
             )) === false
         ) {

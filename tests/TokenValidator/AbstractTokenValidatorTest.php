@@ -6,9 +6,9 @@ namespace T0mmy742\TokenAPI\Tests\TokenValidator;
 
 use DateInterval;
 use DateTimeImmutable;
-use Lcobucci\Jose\Parsing\Decoder;
-use Lcobucci\Jose\Parsing\Exception;
 use Lcobucci\JWT\Configuration;
+use Lcobucci\JWT\Decoder;
+use Lcobucci\JWT\Encoding\CannotDecodeContent;
 use Lcobucci\JWT\Parser;
 use Lcobucci\JWT\Signer\Key;
 use Lcobucci\JWT\Signer\None;
@@ -36,8 +36,8 @@ class AbstractTokenValidatorTest extends TestCase
 
         $this->jwtConfiguration = Configuration::forAsymmetricSigner(
             new Sha256(),
-            new Key('file://' . __DIR__ . '/../Stubs/private.key'),
-            new Key('file://' . __DIR__ . '/../Stubs/public.key')
+            Key\LocalFileReference::file(__DIR__ . '/../Stubs/private.key'),
+            Key\LocalFileReference::file(__DIR__ . '/../Stubs/public.key')
         );
 
         $this->abstractTokenValidator = $this->getMockForAbstractClass(AbstractTokenValidator::class, [
@@ -55,18 +55,18 @@ class AbstractTokenValidatorTest extends TestCase
             ->withConsecutive(['access_token_id', 'TOKEN_ID'], ['user_id', 'USER_ID'])
             ->willReturn($serverRequest);
 
-        $token = $this->jwtConfiguration->createBuilder()
+        $token = $this->jwtConfiguration->builder()
             ->identifiedBy('TOKEN_ID')
             ->issuedAt(new DateTimeImmutable('@' . time()))
             ->canOnlyBeUsedAfter(new DateTimeImmutable('@' . time()))
             ->expiresAt((new DateTimeImmutable('@' . time()))->add(new DateInterval('PT1H')))
             ->relatedTo('USER_ID')
-            ->getToken($this->jwtConfiguration->getSigner(), $this->jwtConfiguration->getSigningKey());
+            ->getToken($this->jwtConfiguration->signer(), $this->jwtConfiguration->signingKey());
 
         $this->abstractTokenValidator
             ->expects($this->once())
             ->method('retrieveToken')
-            ->willReturn((string) $token);
+            ->willReturn($token->toString());
 
         $this->accessTokenRepositoryInterface
             ->expects($this->once())
@@ -97,24 +97,24 @@ class AbstractTokenValidatorTest extends TestCase
     {
         $serverRequest = $this->createStub(ServerRequestInterface::class);
 
-        $token = $this->jwtConfiguration->createBuilder()
+        $token = $this->jwtConfiguration->builder()
             ->identifiedBy('TOKEN_ID')
             ->issuedAt(new DateTimeImmutable('@' . time()))
             ->canOnlyBeUsedAfter(new DateTimeImmutable('@' . time()))
             ->expiresAt((new DateTimeImmutable('@' . time()))->add(new DateInterval('PT1H')))
             ->relatedTo('USER_ID')
-            ->getToken($this->jwtConfiguration->getSigner(), $this->jwtConfiguration->getSigningKey());
+            ->getToken($this->jwtConfiguration->signer(), $this->jwtConfiguration->signingKey());
 
         $this->abstractTokenValidator
             ->expects($this->once())
             ->method('retrieveToken')
-            ->willReturn((string) $token);
+            ->willReturn($token->toString());
 
         $decoder = $this->createStub(Decoder::class);
         $decoder
             ->method('jsonDecode')
-            ->willThrowException(new Exception());
-        $this->jwtConfiguration->setDecoder($decoder);
+            ->willThrowException(new CannotDecodeContent());
+        $this->jwtConfiguration->setParser(new Token\Parser($decoder));
 
         $this->expectException(AccessDeniedException::class);
         $this->expectExceptionMessage('Error while decoding from JSON');
@@ -126,18 +126,18 @@ class AbstractTokenValidatorTest extends TestCase
     {
         $serverRequest = $this->createStub(ServerRequestInterface::class);
 
-        $token = $this->jwtConfiguration->createBuilder()
+        $token = $this->jwtConfiguration->builder()
             ->identifiedBy('TOKEN_ID')
             ->issuedAt(new DateTimeImmutable('@' . time()))
             ->canOnlyBeUsedAfter(new DateTimeImmutable('@' . time()))
             ->expiresAt((new DateTimeImmutable('@' . time()))->add(new DateInterval('PT1H')))
             ->relatedTo('USER_ID')
-            ->getToken($this->jwtConfiguration->getSigner(), $this->jwtConfiguration->getSigningKey());
+            ->getToken($this->jwtConfiguration->signer(), $this->jwtConfiguration->signingKey());
 
         $this->abstractTokenValidator
             ->expects($this->once())
             ->method('retrieveToken')
-            ->willReturn((string) $token);
+            ->willReturn($token->toString());
 
         $parser = $this->createStub(Parser::class);
         $parser
@@ -154,18 +154,18 @@ class AbstractTokenValidatorTest extends TestCase
     {
         $serverRequest = $this->createStub(ServerRequestInterface::class);
 
-        $token = $this->jwtConfiguration->createBuilder()
+        $token = $this->jwtConfiguration->builder()
             ->identifiedBy('TOKEN_ID')
             ->issuedAt(new DateTimeImmutable('@' . time()))
             ->canOnlyBeUsedAfter(new DateTimeImmutable('@' . time()))
             ->expiresAt((new DateTimeImmutable('@' . time()))->add(new DateInterval('PT1H')))
             ->relatedTo('USER_ID')
-            ->getToken(new None(), new Key(''));
+            ->getToken(new None(), Key\InMemory::empty());
 
         $this->abstractTokenValidator
             ->expects($this->once())
             ->method('retrieveToken')
-            ->willReturn((string) $token);
+            ->willReturn($token->toString());
 
         $this->expectException(AccessDeniedException::class);
         $this->expectExceptionMessage('Access token could not be verified');
@@ -176,18 +176,18 @@ class AbstractTokenValidatorTest extends TestCase
     {
         $serverRequest = $this->createStub(ServerRequestInterface::class);
 
-        $token = $this->jwtConfiguration->createBuilder()
+        $token = $this->jwtConfiguration->builder()
             ->identifiedBy('TOKEN_ID')
             ->issuedAt(new DateTimeImmutable('@' . time()))
             ->canOnlyBeUsedAfter(new DateTimeImmutable('@' . time()))
             ->expiresAt((new DateTimeImmutable('@' . time()))->sub(new DateInterval('PT1H')))
             ->relatedTo('USER_ID')
-            ->getToken($this->jwtConfiguration->getSigner(), $this->jwtConfiguration->getSigningKey());
+            ->getToken($this->jwtConfiguration->signer(), $this->jwtConfiguration->signingKey());
 
         $this->abstractTokenValidator
             ->expects($this->once())
             ->method('retrieveToken')
-            ->willReturn((string) $token);
+            ->willReturn($token->toString());
 
         $this->expectException(AccessDeniedException::class);
         $this->expectExceptionMessage('Access token is invalid');
@@ -198,18 +198,18 @@ class AbstractTokenValidatorTest extends TestCase
     {
         $serverRequest = $this->createStub(ServerRequestInterface::class);
 
-        $token = $this->jwtConfiguration->createBuilder()
+        $token = $this->jwtConfiguration->builder()
             ->identifiedBy('TOKEN_ID')
             ->issuedAt(new DateTimeImmutable('@' . time()))
             ->canOnlyBeUsedAfter(new DateTimeImmutable('@' . time()))
             ->expiresAt((new DateTimeImmutable('@' . time()))->add(new DateInterval('PT1H')))
             ->relatedTo('USER_ID')
-            ->getToken($this->jwtConfiguration->getSigner(), $this->jwtConfiguration->getSigningKey());
+            ->getToken($this->jwtConfiguration->signer(), $this->jwtConfiguration->signingKey());
 
         $this->abstractTokenValidator
             ->expects($this->once())
             ->method('retrieveToken')
-            ->willReturn((string) $token);
+            ->willReturn($token->toString());
 
         $this->accessTokenRepositoryInterface
             ->expects($this->once())

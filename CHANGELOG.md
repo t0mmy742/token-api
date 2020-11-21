@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove `Crypt` trait and use `CryptInterface`
 - Updated tests
 - GitHub Actions replaced Travis CI
+- Updated `lcobucci/jwt` package to version 4
 
 ### Removed
 - Remove Prophecy `phpspec/prophecy` usage for testing

@@ -58,8 +58,8 @@ class TokenGenerationTest extends TestCase
         $this->crypt = $this->createMock(CryptInterface::class);
         $this->jwtConfiguration = Configuration::forAsymmetricSigner(
             new Sha256(),
-            new Key('file://' . __DIR__ . '/../Stubs/private.key'),
-            new Key('file://' . __DIR__ . '/../Stubs/public.key')
+            Key\LocalFileReference::file(__DIR__ . '/../Stubs/private.key'),
+            Key\LocalFileReference::file(__DIR__ . '/../Stubs/public.key')
         );
 
         $this->tokenGeneration = new TokenGeneration(
