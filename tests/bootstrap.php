@@ -95,7 +95,7 @@ Override::apply($classLoader, [
 
             return is_readable($filename);
         },
-        'mb_strlen' => function (string $str, $encoding = null) {
+        'mb_strlen' => function (string $str, $encoding = null): int {
             if (isset($GLOBALS['mb_strlen'])) {
                 unset($GLOBALS['mb_strlen']);
                 return 0;

@@ -108,12 +108,12 @@ class TokenGeneration implements TokenGenerationInterface
      * If the generation is successful, an access token entity will be returned.
      *
      * @param DateInterval $accessTokenTTL
-     * @param mixed $userIdentifier
+     * @param string $userIdentifier
      * @return AccessTokenEntityInterface
      * @throws RandomGenerationException
      * @throws UniqueTokenIdentifierException
      */
-    private function issueAccessToken(DateInterval $accessTokenTTL, $userIdentifier): AccessTokenEntityInterface
+    private function issueAccessToken(DateInterval $accessTokenTTL, string $userIdentifier): AccessTokenEntityInterface
     {
         $accessToken = $this->accessTokenRepository->getNewToken($userIdentifier);
         $accessToken->setExpiryDateTime((new DateTimeImmutable('@' . time()))->add($accessTokenTTL));
@@ -178,7 +178,7 @@ class TokenGeneration implements TokenGenerationInterface
      * @return string
      * @throws RandomGenerationException
      */
-    private function generateUniqueIdentifier()
+    private function generateUniqueIdentifier(): string
     {
         try {
             return bin2hex(random_bytes(32));

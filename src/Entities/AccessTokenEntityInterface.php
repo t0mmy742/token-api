@@ -6,8 +6,9 @@ namespace T0mmy742\TokenAPI\Entities;
 
 use DateTimeImmutable;
 use Lcobucci\JWT\Configuration;
+use Stringable;
 
-interface AccessTokenEntityInterface
+interface AccessTokenEntityInterface extends Stringable
 {
     /**
      * Get the token's identifier.
@@ -57,11 +58,4 @@ interface AccessTokenEntityInterface
      * @param Configuration $jwtConfiguration
      */
     public function setJwtConfiguration(Configuration $jwtConfiguration): void;
-
-    /**
-     * Generate a string representation of the access token.
-     *
-     * @return string
-     */
-    public function __toString(): string;
 }

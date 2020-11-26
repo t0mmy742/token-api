@@ -8,9 +8,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php: [7.4, 8.0]
+        php: [8.0]
         include:
-          - php: 7.4
+          - php: 8.0
             analysis: true
 
     steps:

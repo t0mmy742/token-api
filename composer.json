@@ -11,7 +11,7 @@
         }
     ],
     "require": {
-        "php": "^7.4 || ^8.0",
+        "php": "^8.0",
         "ext-json": "*",
         "ext-sodium": "*",
         "lcobucci/jwt": "^4.0",
@@ -46,5 +46,9 @@
         "psr-4": {
             "T0mmy742\\TokenAPI\\Tests\\": "tests/"
         }
+    },
+    "scripts": {
+        "phpunit": "phpunit --coverage-xml=build/coverage/coverage-xml --log-junit=build/coverage/junit.xml --coverage-html build/coverage/coverage-html",
+        "infection": "infection -s --threads=8 --coverage=build/coverage"
     }
 }

@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [Unreleased (2.0.0 - 2020-12-xx)]
 ### Added
 - New `phpstan` rules
 - Added `infection/infection` package to test mutations
@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated `lcobucci/jwt` package to version 4
 
 ### Removed
+- Drop PHP 7.4 support
 - Remove Prophecy `phpspec/prophecy` usage for testing
 - Remove `defuse/php-encryption` support (only Sodium library used)
 - Remove PSR-7 implementation (`slim/psr7`) for testing (test only with Mock)
