@@ -507,9 +507,13 @@ class TokenGenerationTest extends TestCase
         ];
         $serverRequest = $this->createMock(ServerRequestInterface::class);
         $serverRequest
-            ->expects($this->exactly(2))
+            ->expects($this->once())
             ->method('getParsedBody')
             ->willReturn($parsedBody);
+        $serverRequest
+            ->expects($this->once())
+            ->method('getCookieParams')
+            ->willReturn([]);
 
         $this->crypt
             ->expects($this->once())
@@ -592,14 +596,18 @@ class TokenGenerationTest extends TestCase
 
     public function testBadEncryptionRefreshToken(): void
     {
-        $parsedBody = [
+        $cookies = [
             'refresh_token' => 'BAD_REFRESH_TOKEN'
         ];
         $serverRequest = $this->createMock(ServerRequestInterface::class);
         $serverRequest
-            ->expects($this->exactly(2))
+            ->expects($this->once())
             ->method('getParsedBody')
-            ->willReturn($parsedBody);
+            ->willReturn([]);
+        $serverRequest
+            ->expects($this->once())
+            ->method('getCookieParams')
+            ->willReturn($cookies);
 
         $this->crypt
             ->expects($this->once())
@@ -628,9 +636,13 @@ class TokenGenerationTest extends TestCase
         ];
         $serverRequest = $this->createMock(ServerRequestInterface::class);
         $serverRequest
-            ->expects($this->exactly(2))
+            ->expects($this->once())
             ->method('getParsedBody')
             ->willReturn($parsedBody);
+        $serverRequest
+            ->expects($this->once())
+            ->method('getCookieParams')
+            ->willReturn([]);
 
         $this->crypt
             ->expects($this->once())
@@ -659,9 +671,13 @@ class TokenGenerationTest extends TestCase
         ];
         $serverRequest = $this->createMock(ServerRequestInterface::class);
         $serverRequest
-            ->expects($this->exactly(2))
+            ->expects($this->once())
             ->method('getParsedBody')
             ->willReturn($parsedBody);
+        $serverRequest
+            ->expects($this->once())
+            ->method('getCookieParams')
+            ->willReturn([]);
 
         $this->crypt
             ->expects($this->once())

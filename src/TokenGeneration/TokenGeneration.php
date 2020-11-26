@@ -80,10 +80,16 @@ class TokenGeneration implements TokenGenerationInterface
         ResponseInterface $response
     ): ResponseInterface {
         $requestParameters = (array) $request->getParsedBody();
-        if (!isset($requestParameters['refresh_token'])) {
+        $cookies = $request->getCookieParams();
+        if (isset($requestParameters['refresh_token'])) {
+            $refreshToken = $requestParameters['refresh_token'];
+        } elseif (isset($cookies['refresh_token'])) {
+            $refreshToken = $cookies['refresh_token'];
+        }
+        if (!isset($refreshToken)) {
             $userId = $this->validateUser($request)->getIdentifier();
         } else {
-            $oldRefreshToken = $this->validateOldRefreshToken($request);
+            $oldRefreshToken = $this->validateOldRefreshToken($refreshToken);
 
             $this->accessTokenRepository->revokeAccessToken($oldRefreshToken['access_token_id']);
             $this->refreshTokenRepository->revokeRefreshToken($oldRefreshToken['refresh_token_id']);
@@ -272,16 +278,12 @@ class TokenGeneration implements TokenGenerationInterface
      *
      * If the validation is successful, an array will be returned with refresh token information.
      *
-     * @param ServerRequestInterface $request
+     * @param string $encryptedRefreshToken
      * @return array<string, string>
      * @throws InvalidRefreshTokenException
      */
-    private function validateOldRefreshToken(ServerRequestInterface $request): array
+    private function validateOldRefreshToken(string $encryptedRefreshToken): array
     {
-        $requestParameters = (array) $request->getParsedBody();
-
-        $encryptedRefreshToken = $requestParameters['refresh_token'];
-
         try {
             $refreshToken = $this->crypt->decrypt($encryptedRefreshToken);
         } catch (EncryptionException $e) {
