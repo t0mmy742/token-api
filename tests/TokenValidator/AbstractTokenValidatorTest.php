@@ -57,9 +57,9 @@ class AbstractTokenValidatorTest extends TestCase
 
         $token = $this->jwtConfiguration->builder()
             ->identifiedBy('TOKEN_ID')
-            ->issuedAt(new DateTimeImmutable('@' . time()))
-            ->canOnlyBeUsedAfter(new DateTimeImmutable('@' . time()))
-            ->expiresAt((new DateTimeImmutable('@' . time()))->add(new DateInterval('PT1H')))
+            ->issuedAt(new DateTimeImmutable())
+            ->canOnlyBeUsedAfter(new DateTimeImmutable())
+            ->expiresAt((new DateTimeImmutable())->add(new DateInterval('PT1H')))
             ->relatedTo('USER_ID')
             ->getToken($this->jwtConfiguration->signer(), $this->jwtConfiguration->signingKey());
 
@@ -99,9 +99,9 @@ class AbstractTokenValidatorTest extends TestCase
 
         $token = $this->jwtConfiguration->builder()
             ->identifiedBy('TOKEN_ID')
-            ->issuedAt(new DateTimeImmutable('@' . time()))
-            ->canOnlyBeUsedAfter(new DateTimeImmutable('@' . time()))
-            ->expiresAt((new DateTimeImmutable('@' . time()))->add(new DateInterval('PT1H')))
+            ->issuedAt(new DateTimeImmutable())
+            ->canOnlyBeUsedAfter(new DateTimeImmutable())
+            ->expiresAt((new DateTimeImmutable())->add(new DateInterval('PT1H')))
             ->relatedTo('USER_ID')
             ->getToken($this->jwtConfiguration->signer(), $this->jwtConfiguration->signingKey());
 
@@ -128,9 +128,9 @@ class AbstractTokenValidatorTest extends TestCase
 
         $token = $this->jwtConfiguration->builder()
             ->identifiedBy('TOKEN_ID')
-            ->issuedAt(new DateTimeImmutable('@' . time()))
-            ->canOnlyBeUsedAfter(new DateTimeImmutable('@' . time()))
-            ->expiresAt((new DateTimeImmutable('@' . time()))->add(new DateInterval('PT1H')))
+            ->issuedAt(new DateTimeImmutable())
+            ->canOnlyBeUsedAfter(new DateTimeImmutable())
+            ->expiresAt((new DateTimeImmutable())->add(new DateInterval('PT1H')))
             ->relatedTo('USER_ID')
             ->getToken($this->jwtConfiguration->signer(), $this->jwtConfiguration->signingKey());
 
@@ -156,9 +156,9 @@ class AbstractTokenValidatorTest extends TestCase
 
         $token = $this->jwtConfiguration->builder()
             ->identifiedBy('TOKEN_ID')
-            ->issuedAt(new DateTimeImmutable('@' . time()))
-            ->canOnlyBeUsedAfter(new DateTimeImmutable('@' . time()))
-            ->expiresAt((new DateTimeImmutable('@' . time()))->add(new DateInterval('PT1H')))
+            ->issuedAt(new DateTimeImmutable())
+            ->canOnlyBeUsedAfter(new DateTimeImmutable())
+            ->expiresAt((new DateTimeImmutable())->add(new DateInterval('PT1H')))
             ->relatedTo('USER_ID')
             ->getToken(new None(), Key\InMemory::empty());
 
@@ -178,9 +178,9 @@ class AbstractTokenValidatorTest extends TestCase
 
         $token = $this->jwtConfiguration->builder()
             ->identifiedBy('TOKEN_ID')
-            ->issuedAt(new DateTimeImmutable('@' . time()))
-            ->canOnlyBeUsedAfter(new DateTimeImmutable('@' . time()))
-            ->expiresAt((new DateTimeImmutable('@' . time()))->sub(new DateInterval('PT1H')))
+            ->issuedAt(new DateTimeImmutable())
+            ->canOnlyBeUsedAfter(new DateTimeImmutable())
+            ->expiresAt((new DateTimeImmutable())->sub(new DateInterval('PT1H')))
             ->relatedTo('USER_ID')
             ->getToken($this->jwtConfiguration->signer(), $this->jwtConfiguration->signingKey());
 
@@ -200,9 +200,9 @@ class AbstractTokenValidatorTest extends TestCase
 
         $token = $this->jwtConfiguration->builder()
             ->identifiedBy('TOKEN_ID')
-            ->issuedAt(new DateTimeImmutable('@' . time()))
-            ->canOnlyBeUsedAfter(new DateTimeImmutable('@' . time()))
-            ->expiresAt((new DateTimeImmutable('@' . time()))->add(new DateInterval('PT1H')))
+            ->issuedAt(new DateTimeImmutable())
+            ->canOnlyBeUsedAfter(new DateTimeImmutable())
+            ->expiresAt((new DateTimeImmutable())->add(new DateInterval('PT1H')))
             ->relatedTo('USER_ID')
             ->getToken($this->jwtConfiguration->signer(), $this->jwtConfiguration->signingKey());
 

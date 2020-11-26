@@ -206,13 +206,13 @@ class TokenGenerationTest extends TestCase
 
         $accessToken = new AccessTokenEntity();
         $accessToken->setUserIdentifier('USER_ID');
-        $accessTokenExpiryDateTime = (new DateTimeImmutable('@' . time()))->add(new DateInterval('PT1H'));
+        $accessTokenExpiryDateTime = (new DateTimeImmutable())->add(new DateInterval('PT1H'));
         $accessToken->setExpiryDateTime($accessTokenExpiryDateTime);
         $accessToken->setJwtConfiguration($this->jwtConfiguration);
         $accessToken->setIdentifier('ACCESS_TOKEN_ID');
 
         $refreshToken = new RefreshTokenEntity();
-        $refreshTokenExpiryDateTime = (new DateTimeImmutable('@' . time()))->add(new DateInterval('P1M'));
+        $refreshTokenExpiryDateTime = (new DateTimeImmutable())->add(new DateInterval('P1M'));
         $refreshToken->setExpiryDateTime($refreshTokenExpiryDateTime);
         $refreshToken->setAccessToken($accessToken);
         $refreshToken->setIdentifier('REFRESH_TOKEN_ID');
@@ -278,7 +278,7 @@ class TokenGenerationTest extends TestCase
 
         $accessToken = new AccessTokenEntity();
         $accessToken->setUserIdentifier('USER_ID');
-        $accessTokenExpiryDateTime = (new DateTimeImmutable('@' . time()))->add(new DateInterval('PT1H'));
+        $accessTokenExpiryDateTime = (new DateTimeImmutable())->add(new DateInterval('PT1H'));
         $accessToken->setExpiryDateTime($accessTokenExpiryDateTime);
         $accessToken->setJwtConfiguration($this->jwtConfiguration);
         $accessToken->setIdentifier('ACCESS_TOKEN_ID');
@@ -319,12 +319,12 @@ class TokenGenerationTest extends TestCase
 
         $accessToken = new AccessTokenEntity();
         $accessToken->setUserIdentifier('USER_ID');
-        $accessToken->setExpiryDateTime((new DateTimeImmutable('@' . time()))->add(new DateInterval('PT1H')));
+        $accessToken->setExpiryDateTime((new DateTimeImmutable())->add(new DateInterval('PT1H')));
         $accessToken->setJwtConfiguration($this->jwtConfiguration);
         $accessToken->setIdentifier('ACCESS_TOKEN_ID');
 
         $refreshToken = new RefreshTokenEntity();
-        $refreshToken->setExpiryDateTime((new DateTimeImmutable('@' . time()))->add(new DateInterval('P1M')));
+        $refreshToken->setExpiryDateTime((new DateTimeImmutable())->add(new DateInterval('P1M')));
         $refreshToken->setAccessToken($accessToken);
         $refreshToken->setIdentifier('REFRESH_TOKEN_ID');
 
@@ -345,7 +345,7 @@ class TokenGenerationTest extends TestCase
 
         $accessToken = new AccessTokenEntity();
         $accessToken->setUserIdentifier('USER_ID');
-        $accessToken->setExpiryDateTime((new DateTimeImmutable('@' . time()))->add(new DateInterval('PT1H')));
+        $accessToken->setExpiryDateTime((new DateTimeImmutable())->add(new DateInterval('PT1H')));
         $accessToken->setJwtConfiguration($this->jwtConfiguration);
         $accessToken->setIdentifier('ACCESS_TOKEN_ID');
 

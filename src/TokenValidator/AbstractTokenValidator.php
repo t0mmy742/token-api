@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace T0mmy742\TokenAPI\TokenValidator;
 
-use DateTimeImmutable;
 use InvalidArgumentException;
-use Lcobucci\Clock\FrozenClock;
+use Lcobucci\Clock\SystemClock;
 use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Token\Plain;
 use Lcobucci\JWT\Token\RegisteredClaims;
@@ -16,8 +15,6 @@ use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
 use T0mmy742\TokenAPI\Exception\AccessDeniedException;
 use T0mmy742\TokenAPI\Repository\AccessTokenRepositoryInterface;
-
-use function time;
 
 abstract class AbstractTokenValidator implements TokenValidatorInterface
 {
@@ -56,9 +53,10 @@ abstract class AbstractTokenValidator implements TokenValidatorInterface
         }
 
         if (
-            $this->jwtConfiguration->validator()->validate($token, new ValidAt(
-                new FrozenClock(new DateTimeImmutable('@' . time()))
-            )) === false
+            $this->jwtConfiguration->validator()->validate(
+                $token,
+                new ValidAt(SystemClock::fromSystemTimezone())
+            ) === false
         ) {
             throw new AccessDeniedException('Access token is invalid');
         }

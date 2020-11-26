@@ -116,7 +116,7 @@ class TokenGeneration implements TokenGenerationInterface
     private function issueAccessToken(DateInterval $accessTokenTTL, string $userIdentifier): AccessTokenEntityInterface
     {
         $accessToken = $this->accessTokenRepository->getNewToken($userIdentifier);
-        $accessToken->setExpiryDateTime((new DateTimeImmutable('@' . time()))->add($accessTokenTTL));
+        $accessToken->setExpiryDateTime((new DateTimeImmutable())->add($accessTokenTTL));
         $accessToken->setJwtConfiguration($this->jwtConfiguration);
 
         $tokenGenerationAttempts = 0;
@@ -153,7 +153,7 @@ class TokenGeneration implements TokenGenerationInterface
             return null;
         }
 
-        $refreshToken->setExpiryDateTime((new DateTimeImmutable('@' . time()))->add($this->refreshTokenTTL));
+        $refreshToken->setExpiryDateTime((new DateTimeImmutable())->add($this->refreshTokenTTL));
         $refreshToken->setAccessToken($accessToken);
 
         $tokenGenerationAttempts = 0;

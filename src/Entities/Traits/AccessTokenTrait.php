@@ -6,9 +6,10 @@ namespace T0mmy742\TokenAPI\Entities\Traits;
 
 use DateTimeImmutable;
 use Lcobucci\JWT\Configuration;
+use Lcobucci\JWT\Encoding\ChainedFormatter;
+use Lcobucci\JWT\Encoding\UnifyAudience;
 use Lcobucci\JWT\Token;
-
-use function time;
+use T0mmy742\TokenAPI\JWT\UnixTimestampDates;
 
 trait AccessTokenTrait
 {
@@ -91,11 +92,13 @@ trait AccessTokenTrait
      */
     private function convertToJWT(): Token
     {
+        $now = new DateTimeImmutable();
+
         return $this->jwtConfiguration
-            ->builder()
+            ->builder(new ChainedFormatter(new UnifyAudience(), new UnixTimestampDates()))
             ->identifiedBy($this->getIdentifier())
-            ->issuedAt(new DateTimeImmutable('@' . time()))
-            ->canOnlyBeUsedAfter(new DateTimeImmutable('@' . time()))
+            ->issuedAt($now)
+            ->canOnlyBeUsedAfter($now)
             ->expiresAt($this->getExpiryDateTime())
             ->relatedTo($this->getUserIdentifier())
             ->getToken($this->jwtConfiguration->signer(), $this->jwtConfiguration->signingKey());
