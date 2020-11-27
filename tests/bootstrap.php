@@ -9,7 +9,7 @@ use T0mmy742\TokenAPI\Crypt\SodiumCrypt;
 use T0mmy742\TokenAPI\Middleware\AuthorizationServerMiddleware;
 use T0mmy742\TokenAPI\Middleware\ResourceServerMiddleware;
 use T0mmy742\TokenAPI\TokenGeneration\TokenGeneration;
-use T0mmy742\TokenAPI\TokenValidator\BearerAuthorizationHeaderTokenValidator;
+use T0mmy742\TokenAPI\TokenValidator\TokenRetriever\BearerAuthorizationHeaderTokenRetriever;
 
 /** @var ClassLoader $classLoader */
 $classLoader = require __DIR__ . '/../vendor/autoload.php';
@@ -25,7 +25,7 @@ Override::apply($classLoader, [
             return json_encode($value);
         }
     ],
-    BearerAuthorizationHeaderTokenValidator::class => [
+    BearerAuthorizationHeaderTokenRetriever::class => [
         'preg_replace' => function ($pattern, $replacement, $subject, $limit = -1, &$count = null) {
             if (isset($GLOBALS['preg_replace_null'])) {
                 unset($GLOBALS['preg_replace_null']);

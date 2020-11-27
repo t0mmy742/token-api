@@ -2,31 +2,15 @@
 
 declare(strict_types=1);
 
-namespace T0mmy742\TokenAPI\Tests\TokenValidator;
+namespace T0mmy742\TokenAPI\Tests\TokenValidator\TokenRetriever;
 
-use Lcobucci\JWT\Configuration;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
-use ReflectionClass;
 use T0mmy742\TokenAPI\Exception\AccessDeniedException;
-use T0mmy742\TokenAPI\Repository\AccessTokenRepositoryInterface;
-use T0mmy742\TokenAPI\TokenValidator\BearerAuthorizationHeaderTokenValidator;
+use T0mmy742\TokenAPI\TokenValidator\TokenRetriever\BearerAuthorizationHeaderTokenRetriever;
 
 class BearerAuthorizationHeaderTokenValidatorTest extends TestCase
 {
-    private function retrieveTokenMethod(ServerRequestInterface $request): string
-    {
-        $bearerAuthorizationHeaderTokenValidator = new BearerAuthorizationHeaderTokenValidator(
-            $this->createStub(AccessTokenRepositoryInterface::class),
-            $this->createStub(Configuration::class)
-        );
-        $class = new ReflectionClass($bearerAuthorizationHeaderTokenValidator);
-        $method = $class->getMethod('retrieveToken');
-        $method->setAccessible(true);
-
-        return $method->invoke($bearerAuthorizationHeaderTokenValidator, $request);
-    }
-
     public function testGoodHeader(): void
     {
         $token = 'MY_TOKEN';
@@ -43,7 +27,7 @@ class BearerAuthorizationHeaderTokenValidatorTest extends TestCase
             ->with('Authorization')
             ->willReturn(['Bearer ' . $token]);
 
-        $tokenResult = $this->retrieveTokenMethod($serverRequest);
+        $tokenResult = (new BearerAuthorizationHeaderTokenRetriever())->retrieveToken($serverRequest);
 
         $this->assertSame($token, $tokenResult);
     }
@@ -64,7 +48,7 @@ class BearerAuthorizationHeaderTokenValidatorTest extends TestCase
             ->with('Authorization')
             ->willReturn(['Bearer ' . $token]);
 
-        $tokenResult = $this->retrieveTokenMethod($serverRequest);
+        $tokenResult = (new BearerAuthorizationHeaderTokenRetriever())->retrieveToken($serverRequest);
 
         $this->assertSame(trim($token), $tokenResult);
     }
@@ -80,7 +64,7 @@ class BearerAuthorizationHeaderTokenValidatorTest extends TestCase
 
         $this->expectException(AccessDeniedException::class);
         $this->expectExceptionMessage('Missing "Authorization" header');
-        $this->retrieveTokenMethod($serverRequest);
+        (new BearerAuthorizationHeaderTokenRetriever())->retrieveToken($serverRequest);
     }
 
     public function testErrorPregReplace(): void
@@ -101,7 +85,7 @@ class BearerAuthorizationHeaderTokenValidatorTest extends TestCase
 
         $GLOBALS['preg_replace_null'] = true;
 
-        $tokenResult = $this->retrieveTokenMethod($serverRequest);
+        $tokenResult = (new BearerAuthorizationHeaderTokenRetriever())->retrieveToken($serverRequest);
 
         $this->assertEquals('', $tokenResult);
     }

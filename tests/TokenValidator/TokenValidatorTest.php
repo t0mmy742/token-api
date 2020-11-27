@@ -20,15 +20,17 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 use T0mmy742\TokenAPI\Exception\AccessDeniedException;
 use T0mmy742\TokenAPI\Repository\AccessTokenRepositoryInterface;
-use T0mmy742\TokenAPI\TokenValidator\AbstractTokenValidator;
+use T0mmy742\TokenAPI\TokenValidator\TokenRetriever\TokenRetrieverInterface;
+use T0mmy742\TokenAPI\TokenValidator\TokenValidator;
 
-class AbstractTokenValidatorTest extends TestCase
+class TokenValidatorTest extends TestCase
 {
-    /** @var AbstractTokenValidator&MockObject */
-    private AbstractTokenValidator $abstractTokenValidator;
+    private TokenValidator $tokenValidator;
     /** @var AccessTokenRepositoryInterface&MockObject */
     private AccessTokenRepositoryInterface $accessTokenRepositoryInterface;
     private Configuration $jwtConfiguration;
+    /** @var TokenRetrieverInterface&MockObject */
+    private TokenRetrieverInterface $tokenRetriever;
 
     protected function setUp(): void
     {
@@ -40,10 +42,13 @@ class AbstractTokenValidatorTest extends TestCase
             Key\LocalFileReference::file(__DIR__ . '/../Stubs/public.key')
         );
 
-        $this->abstractTokenValidator = $this->getMockForAbstractClass(AbstractTokenValidator::class, [
+        $this->tokenRetriever = $this->createMock(TokenRetrieverInterface::class);
+
+        $this->tokenValidator = new TokenValidator(
             $this->accessTokenRepositoryInterface,
-            $this->jwtConfiguration
-        ]);
+            $this->jwtConfiguration,
+            $this->tokenRetriever
+        );
     }
 
     public function testValidToken(): void
@@ -63,7 +68,7 @@ class AbstractTokenValidatorTest extends TestCase
             ->relatedTo('USER_ID')
             ->getToken($this->jwtConfiguration->signer(), $this->jwtConfiguration->signingKey());
 
-        $this->abstractTokenValidator
+        $this->tokenRetriever
             ->expects($this->once())
             ->method('retrieveToken')
             ->willReturn($token->toString());
@@ -74,7 +79,7 @@ class AbstractTokenValidatorTest extends TestCase
             ->with($token->claims()->get(RegisteredClaims::ID))
             ->willReturn(false);
 
-        $this->abstractTokenValidator->validateToken($serverRequest);
+        $this->tokenValidator->validateToken($serverRequest);
     }
 
     public function testNotAToken(): void
@@ -83,14 +88,14 @@ class AbstractTokenValidatorTest extends TestCase
 
         $token = 'MY_BAD_TOKEN';
 
-        $this->abstractTokenValidator
+        $this->tokenRetriever
             ->expects($this->once())
             ->method('retrieveToken')
             ->willReturn($token);
 
         $this->expectException(AccessDeniedException::class);
         $this->expectExceptionCode(0);
-        $this->abstractTokenValidator->validateToken($serverRequest);
+        $this->tokenValidator->validateToken($serverRequest);
     }
 
     public function testBadJsonDecodingToken(): void
@@ -105,7 +110,7 @@ class AbstractTokenValidatorTest extends TestCase
             ->relatedTo('USER_ID')
             ->getToken($this->jwtConfiguration->signer(), $this->jwtConfiguration->signingKey());
 
-        $this->abstractTokenValidator
+        $this->tokenRetriever
             ->expects($this->once())
             ->method('retrieveToken')
             ->willReturn($token->toString());
@@ -119,7 +124,7 @@ class AbstractTokenValidatorTest extends TestCase
         $this->expectException(AccessDeniedException::class);
         $this->expectExceptionMessage('Error while decoding from JSON');
         $this->expectExceptionCode(0);
-        $this->abstractTokenValidator->validateToken($serverRequest);
+        $this->tokenValidator->validateToken($serverRequest);
     }
 
     public function testBadParsingToken(): void
@@ -134,7 +139,7 @@ class AbstractTokenValidatorTest extends TestCase
             ->relatedTo('USER_ID')
             ->getToken($this->jwtConfiguration->signer(), $this->jwtConfiguration->signingKey());
 
-        $this->abstractTokenValidator
+        $this->tokenRetriever
             ->expects($this->once())
             ->method('retrieveToken')
             ->willReturn($token->toString());
@@ -147,7 +152,7 @@ class AbstractTokenValidatorTest extends TestCase
 
         $this->expectException(AccessDeniedException::class);
         $this->expectExceptionMessage('Error while parsing access token');
-        $this->abstractTokenValidator->validateToken($serverRequest);
+        $this->tokenValidator->validateToken($serverRequest);
     }
 
     public function testBadSignerToken(): void
@@ -162,14 +167,14 @@ class AbstractTokenValidatorTest extends TestCase
             ->relatedTo('USER_ID')
             ->getToken(new None(), Key\InMemory::empty());
 
-        $this->abstractTokenValidator
+        $this->tokenRetriever
             ->expects($this->once())
             ->method('retrieveToken')
             ->willReturn($token->toString());
 
         $this->expectException(AccessDeniedException::class);
         $this->expectExceptionMessage('Access token could not be verified');
-        $this->abstractTokenValidator->validateToken($serverRequest);
+        $this->tokenValidator->validateToken($serverRequest);
     }
 
     public function testExpiredToken(): void
@@ -184,14 +189,14 @@ class AbstractTokenValidatorTest extends TestCase
             ->relatedTo('USER_ID')
             ->getToken($this->jwtConfiguration->signer(), $this->jwtConfiguration->signingKey());
 
-        $this->abstractTokenValidator
+        $this->tokenRetriever
             ->expects($this->once())
             ->method('retrieveToken')
             ->willReturn($token->toString());
 
         $this->expectException(AccessDeniedException::class);
         $this->expectExceptionMessage('Access token is invalid');
-        $this->abstractTokenValidator->validateToken($serverRequest);
+        $this->tokenValidator->validateToken($serverRequest);
     }
 
     public function testRevokedToken(): void
@@ -206,7 +211,7 @@ class AbstractTokenValidatorTest extends TestCase
             ->relatedTo('USER_ID')
             ->getToken($this->jwtConfiguration->signer(), $this->jwtConfiguration->signingKey());
 
-        $this->abstractTokenValidator
+        $this->tokenRetriever
             ->expects($this->once())
             ->method('retrieveToken')
             ->willReturn($token->toString());
@@ -219,6 +224,6 @@ class AbstractTokenValidatorTest extends TestCase
 
         $this->expectException(AccessDeniedException::class);
         $this->expectExceptionMessage('Access token has been revoked');
-        $this->abstractTokenValidator->validateToken($serverRequest);
+        $this->tokenValidator->validateToken($serverRequest);
     }
 }

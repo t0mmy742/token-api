@@ -49,6 +49,6 @@
     },
     "scripts": {
         "phpunit": "phpunit --coverage-xml=build/coverage/coverage-xml --log-junit=build/coverage/junit.xml --coverage-html build/coverage/coverage-html",
-        "infection": "infection -s --threads=8 --coverage=build/coverage"
+        "infection": "infection -s --threads=8 --coverage=build/coverage -v"
     }
 }

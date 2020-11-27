@@ -49,7 +49,7 @@ jobs:
         run: vendor/bin/phpunit --coverage-text --coverage-clover build/logs/clover.xml --coverage-xml=build/coverage/coverage-xml --log-junit=build/coverage/junit.xml
 
       - name: Infection
-        run: vendor/bin/infection -s --threads=4 --coverage=build/coverage
+        run: vendor/bin/infection -s --threads=4 --coverage=build/coverage -v
 
       - name: Upload coverage results to Coveralls
         if: matrix.analysis

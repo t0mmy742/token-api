@@ -15,21 +15,28 @@ use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
 use T0mmy742\TokenAPI\Exception\AccessDeniedException;
 use T0mmy742\TokenAPI\Repository\AccessTokenRepositoryInterface;
+use T0mmy742\TokenAPI\TokenValidator\TokenRetriever\ChainedTokenRetriever;
+use T0mmy742\TokenAPI\TokenValidator\TokenRetriever\TokenRetrieverInterface;
 
-abstract class AbstractTokenValidator implements TokenValidatorInterface
+class TokenValidator implements TokenValidatorInterface
 {
     private AccessTokenRepositoryInterface $accessTokenRepository;
     private Configuration $jwtConfiguration;
+    private TokenRetrieverInterface $tokenRetriever;
 
-    public function __construct(AccessTokenRepositoryInterface $accessTokenRepository, Configuration $jwtConfiguration)
-    {
+    public function __construct(
+        AccessTokenRepositoryInterface $accessTokenRepository,
+        Configuration $jwtConfiguration,
+        ?TokenRetrieverInterface $tokenRetriever = null
+    ) {
         $this->accessTokenRepository = $accessTokenRepository;
         $this->jwtConfiguration = $jwtConfiguration;
+        $this->tokenRetriever = $tokenRetriever ?? ChainedTokenRetriever::default();
     }
 
     public function validateToken(ServerRequestInterface $request): ServerRequestInterface
     {
-        $jwt = $this->retrieveToken($request);
+        $jwt = $this->tokenRetriever->retrieveToken($request);
 
         try {
             $token = $this->jwtConfiguration->parser()->parse($jwt);
@@ -69,6 +76,4 @@ abstract class AbstractTokenValidator implements TokenValidatorInterface
             ->withAttribute('access_token_id', $token->claims()->get(RegisteredClaims::ID))
             ->withAttribute('user_id', $token->claims()->get(RegisteredClaims::SUBJECT));
     }
-
-    abstract protected function retrieveToken(ServerRequestInterface $request): string;
 }

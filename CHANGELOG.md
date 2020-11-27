@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `infection/infection` package to test mutations
 - Added Sodium library support to replace `defuse/php-encryption`
 - PHP 8 support
+- Can store token to cookies (TODO)
+- Access token and refresh token can be retrieved from cookie (usage of `TokenRetrieverInterface`)
 
 ### Changed
 - Remove `Crypt` trait and use `CryptInterface`

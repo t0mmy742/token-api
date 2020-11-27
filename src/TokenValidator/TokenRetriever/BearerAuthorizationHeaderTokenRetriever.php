@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace T0mmy742\TokenAPI\TokenValidator;
+namespace T0mmy742\TokenAPI\TokenValidator\TokenRetriever;
 
 use Psr\Http\Message\ServerRequestInterface;
 use T0mmy742\TokenAPI\Exception\AccessDeniedException;
@@ -10,7 +10,7 @@ use T0mmy742\TokenAPI\Exception\AccessDeniedException;
 use function preg_replace;
 use function trim;
 
-class BearerAuthorizationHeaderTokenValidator extends AbstractTokenValidator
+class BearerAuthorizationHeaderTokenRetriever implements TokenRetrieverInterface
 {
     /**
      * Retrieve token from the authorization header.
@@ -19,7 +19,7 @@ class BearerAuthorizationHeaderTokenValidator extends AbstractTokenValidator
      * @return string
      * @throws AccessDeniedException
      */
-    protected function retrieveToken(ServerRequestInterface $request): string
+    public function retrieveToken(ServerRequestInterface $request): string
     {
         if ($request->hasHeader('Authorization') === false) {
             throw new AccessDeniedException('Missing "Authorization" header');
