@@ -23,6 +23,7 @@ use T0mmy742\TokenAPI\Exception\UniqueTokenIdentifierException;
 use T0mmy742\TokenAPI\Repository\AccessTokenRepositoryInterface;
 use T0mmy742\TokenAPI\Repository\RefreshTokenRepositoryInterface;
 use T0mmy742\TokenAPI\Repository\UserRepositoryInterface;
+use T0mmy742\TokenAPI\TokenGeneration\ResponseType\ResponseTypeInterface;
 
 use function bin2hex;
 use function json_decode;
@@ -37,6 +38,7 @@ class TokenGeneration implements TokenGenerationInterface
     private AccessTokenRepositoryInterface $accessTokenRepository;
     private RefreshTokenRepositoryInterface $refreshTokenRepository;
     private UserRepositoryInterface $userRepository;
+    private ResponseTypeInterface $responseType;
     private CryptInterface $crypt;
     private DateInterval $accessTokenTTL;
     private DateInterval $refreshTokenTTL;
@@ -46,6 +48,7 @@ class TokenGeneration implements TokenGenerationInterface
         AccessTokenRepositoryInterface $accessTokenRepository,
         RefreshTokenRepositoryInterface $refreshTokenRepository,
         UserRepositoryInterface $userRepository,
+        ResponseTypeInterface $responseType,
         CryptInterface $crypt,
         DateInterval $accessTokenTTL,
         DateInterval $refreshTokenTTL,
@@ -54,10 +57,11 @@ class TokenGeneration implements TokenGenerationInterface
         $this->accessTokenRepository = $accessTokenRepository;
         $this->refreshTokenRepository = $refreshTokenRepository;
         $this->userRepository = $userRepository;
+        $this->responseType = $responseType;
+        $this->crypt = $crypt;
         $this->accessTokenTTL = $accessTokenTTL;
         $this->refreshTokenTTL = $refreshTokenTTL;
         $this->jwtConfiguration = $jwtConfiguration;
-        $this->crypt = $crypt;
     }
 
     /**
@@ -83,6 +87,8 @@ class TokenGeneration implements TokenGenerationInterface
         $cookies = $request->getCookieParams();
         if (isset($requestParameters['refresh_token'])) {
             $refreshToken = $requestParameters['refresh_token'];
+        } elseif (isset($cookies['__Secure-refresh_token'])) {
+            $refreshToken = $cookies['__Secure-refresh_token'];
         } elseif (isset($cookies['refresh_token'])) {
             $refreshToken = $cookies['refresh_token'];
         }
@@ -204,12 +210,6 @@ class TokenGeneration implements TokenGenerationInterface
     ): ResponseInterface {
         $expireDateTime = $accessToken->getExpiryDateTime()->getTimestamp();
 
-        $responseParams = [
-            'token_type'   => 'Bearer',
-            'expires_in'   => $expireDateTime - time() ,
-            'access_token' => (string) $accessToken,
-        ];
-
         if ($refreshToken instanceof RefreshTokenEntityInterface) {
             $refreshTokenPayload = json_encode([
                 'refresh_token_id' => $refreshToken->getIdentifier(),
@@ -222,13 +222,7 @@ class TokenGeneration implements TokenGenerationInterface
                 throw new JsonEncodingException('Error while JSON encoding the refresh token payload');
             }
 
-            $responseParams['refresh_token'] = $this->crypt->encrypt($refreshTokenPayload);
-        }
-
-        $responseParams = json_encode($responseParams);
-
-        if ($responseParams === false) {
-            throw new JsonEncodingException('Error while JSON encoding response parameters');
+            $encryptedRefreshToken = $this->crypt->encrypt($refreshTokenPayload);
         }
 
         $response = $response
@@ -237,7 +231,13 @@ class TokenGeneration implements TokenGenerationInterface
             ->withHeader('cache-control', 'no-store')
             ->withHeader('content-type', 'application/json; charset=UTF-8');
 
-        $response->getBody()->write($responseParams);
+        $response = $this->responseType->completeResponse(
+            $response,
+            (string) $accessToken,
+            $expireDateTime,
+            $encryptedRefreshToken ?? null,
+            $refreshToken?->getExpiryDateTime()?->getTimestamp()
+        );
 
         return $response;
     }

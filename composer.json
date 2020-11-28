@@ -48,7 +48,15 @@
         }
     },
     "scripts": {
+        "phpcs": "phpcs",
+        "phpstan": "phpstan analyse",
         "phpunit": "phpunit --coverage-xml=build/coverage/coverage-xml --log-junit=build/coverage/junit.xml --coverage-html build/coverage/coverage-html",
-        "infection": "infection -s --threads=8 --coverage=build/coverage -v"
+        "infection": "infection -s --threads=8 --coverage=build/coverage -v",
+        "tests": [
+            "@phpcs",
+            "@phpstan",
+            "@phpunit",
+            "@infection"
+        ]
     }
 }

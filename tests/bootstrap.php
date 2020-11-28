@@ -8,6 +8,7 @@ use t0mmy742\StreamWrapper\StreamWrapper;
 use T0mmy742\TokenAPI\Crypt\SodiumCrypt;
 use T0mmy742\TokenAPI\Middleware\AuthorizationServerMiddleware;
 use T0mmy742\TokenAPI\Middleware\ResourceServerMiddleware;
+use T0mmy742\TokenAPI\TokenGeneration\ResponseType\BearerResponseType;
 use T0mmy742\TokenAPI\TokenGeneration\TokenGeneration;
 use T0mmy742\TokenAPI\TokenValidator\TokenRetriever\BearerAuthorizationHeaderTokenRetriever;
 
@@ -33,6 +34,24 @@ Override::apply($classLoader, [
             }
 
             return preg_replace($pattern, $replacement, $subject, $limit, $count);
+        }
+    ],
+    BearerResponseType::class => [
+        'json_encode' => function ($value) {
+            if (isset($GLOBALS['json_encode_false'])) {
+                unset($GLOBALS['json_encode_false']);
+                return false;
+            }
+
+            return json_encode($value);
+        },
+        'time' => function (): int {
+            if (isset($GLOBALS['time_10'])) {
+                unset($GLOBALS['time_10']);
+                return 10;
+            }
+
+            return time();
         }
     ],
     ResourceServerMiddleware::class => [
