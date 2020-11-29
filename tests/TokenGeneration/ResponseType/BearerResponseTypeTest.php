@@ -11,6 +11,7 @@ use T0mmy742\TokenAPI\Exception\JsonEncodingException;
 use T0mmy742\TokenAPI\TokenGeneration\ResponseType\BearerResponseType;
 
 use function json_decode;
+use function strlen;
 
 class BearerResponseTypeTest extends TestCase
 {

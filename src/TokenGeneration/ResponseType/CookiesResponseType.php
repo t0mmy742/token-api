@@ -6,6 +6,9 @@ namespace T0mmy742\TokenAPI\TokenGeneration\ResponseType;
 
 use Psr\Http\Message\ResponseInterface;
 
+use function explode;
+use function gmdate;
+
 class CookiesResponseType implements ResponseTypeInterface
 {
     private string $domain;

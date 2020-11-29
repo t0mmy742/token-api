@@ -8,6 +8,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use T0mmy742\TokenAPI\TokenGeneration\ResponseType\CookiesResponseType;
 
+use function gmdate;
+
 class CookiesResponseTypeTest extends TestCase
 {
     public function testCompleteResponse(): void

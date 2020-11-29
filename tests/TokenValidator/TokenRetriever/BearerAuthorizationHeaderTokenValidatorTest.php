@@ -9,6 +9,8 @@ use Psr\Http\Message\ServerRequestInterface;
 use T0mmy742\TokenAPI\Exception\AccessDeniedException;
 use T0mmy742\TokenAPI\TokenValidator\TokenRetriever\BearerAuthorizationHeaderTokenRetriever;
 
+use function trim;
+
 class BearerAuthorizationHeaderTokenValidatorTest extends TestCase
 {
     public function testGoodHeader(): void
