@@ -16,7 +16,7 @@ class ChainedResponseType implements ResponseTypeInterface
         $this->responseTypes = $responseTypes;
     }
 
-    public static function default(string $domain, bool $secure): self
+    public static function default(?string $domain = null, bool $secure = true): self
     {
         return new self(new BearerResponseType(), new CookiesResponseType($domain, $secure));
     }

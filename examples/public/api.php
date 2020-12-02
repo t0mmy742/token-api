@@ -11,7 +11,8 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Factory\AppFactory;
 use T0mmy742\TokenAPI\Middleware\ResourceServerMiddleware;
 use T0mmy742\TokenAPI\ResourceServer;
-use T0mmy742\TokenAPI\TokenValidator\BearerAuthorizationHeaderTokenValidator;
+use T0mmy742\TokenAPI\TokenValidator\TokenRetriever\BearerAuthorizationHeaderTokenRetriever;
+use T0mmy742\TokenAPI\TokenValidator\TokenValidator;
 use T0mmy742\TokenAPIExamples\Repositories\AccessTokenRepository;
 
 include __DIR__ . '/../vendor/autoload.php';
@@ -19,13 +20,14 @@ include __DIR__ . '/../vendor/autoload.php';
 $container = new Container();
 
 $container->set(ResourceServer::class, function () {
-    return new ResourceServer(new BearerAuthorizationHeaderTokenValidator(
+    return new ResourceServer(new TokenValidator(
         new AccessTokenRepository(),
         Configuration::forAsymmetricSigner(
             new Sha256(),
             new Key('file://' . __DIR__ . '/../private.key'),
             new Key('file://' . __DIR__ . '/../public.key')
-        )
+        ),
+        new BearerAuthorizationHeaderTokenRetriever()
     ));
 });
 

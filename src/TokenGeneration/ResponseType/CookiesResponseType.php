@@ -11,10 +11,10 @@ use function gmdate;
 
 class CookiesResponseType implements ResponseTypeInterface
 {
-    private string $domain;
+    private ?string $domain;
     private bool $secure;
 
-    public function __construct(string $domain, bool $secure)
+    public function __construct(?string $domain, bool $secure = true)
     {
         $this->domain = $domain;
         $this->secure = $secure;
@@ -53,22 +53,22 @@ class CookiesResponseType implements ResponseTypeInterface
 
         $cookies = [
             ($this->secure ? '__Secure-' : '') . 'access_token-payload=' . $accessToken[0] . '.' . $accessToken[1]
-            . '; domain=' . $this->domain
+            . ($this->domain !== null ? '; domain=' . $this->domain : '')
             . '; path=/; expires=' . gmdate('D, d-M-Y H:i:s e', $expirationAccessToken)
-            . '; ' . ($this->secure ? 'secure; ' : '')
+            . '; ' . ($this->secure ? 'Secure; ' : '')
             . 'HostOnly; SameSite=Lax',
             ($this->secure ? '__Secure-' : '') . 'access_token-signature=' . $accessToken[2]
-            . '; domain=' . $this->domain
+            . ($this->domain !== null ? '; domain=' . $this->domain : '')
             . '; path=/; expires=' . gmdate('D, d-M-Y H:i:s e', $expirationAccessToken)
-            . '; ' . ($this->secure ? 'secure; ' : '')
+            . '; ' . ($this->secure ? 'Secure; ' : '')
             . 'HostOnly; HttpOnly; SameSite=Lax'
         ];
 
         if ($refreshToken !== null) {
             $cookies[] = ($this->secure ? '__Secure-' : '') . 'refresh_token=' . $refreshToken
-                . '; domain=' . $this->domain
+                . ($this->domain !== null ? '; domain=' . $this->domain : '')
                 . '; path=/; expires=' . gmdate('D, d-M-Y H:i:s e', $expirationRefreshToken)
-                . '; ' . ($this->secure ? 'secure; ' : '')
+                . '; ' . ($this->secure ? 'Secure; ' : '')
                 . 'HostOnly; HttpOnly; SameSite=Lax';
         }
 

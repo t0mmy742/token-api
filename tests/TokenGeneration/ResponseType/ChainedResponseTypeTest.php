@@ -31,9 +31,9 @@ class ChainedResponseTypeTest extends TestCase
         $this->assertSame($response, $newResponse);
     }
 
-    public function testDefautResponseType(): void
+    public function testDefautResponseTypeIsSecure(): void
     {
-        $chainedResponseType = ChainedResponseType::default('localhost', false);
+        $chainedResponseType = ChainedResponseType::default();
 
         $response = $this->createMock(ResponseInterface::class);
         $stream = $this->createMock(StreamInterface::class);
@@ -48,19 +48,23 @@ class ChainedResponseTypeTest extends TestCase
         $response
             ->expects($this->exactly(2))
             ->method('withAddedHeader')
-            ->willReturn($response);
+            ->willReturnCallback(
+                function (string $name, $value) use ($response): ResponseInterface {
+                    $this->assertStringContainsString('Secure;', $value);
+
+                    return $response;
+                }
+            );
 
         $accessToken = 'MY.ACCESS.TOKEN';
         $expirationAccessToken = 100;
-        $refreshToken = null;
-        $expirationRefreshToken = null;
 
         $newResponse = $chainedResponseType->completeResponse(
             $response,
             $accessToken,
             $expirationAccessToken,
-            $refreshToken,
-            $expirationRefreshToken
+            null,
+            null
         );
 
         $this->assertSame($response, $newResponse);

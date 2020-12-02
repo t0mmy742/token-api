@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated tests
 - GitHub Actions replaced Travis CI
 - Updated `lcobucci/jwt` package to version 4
+- Updated examples
 
 ### Removed
 - Drop PHP 7.4 support

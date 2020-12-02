@@ -12,15 +12,13 @@ use function gmdate;
 
 class CookiesResponseTypeTest extends TestCase
 {
-    public function testCompleteResponse(): void
+    public function testDefaultCookieIsSecure(): void
     {
         $accessToken = 'MY.ACCESS.TOKEN';
         $accessTokenExploded = ['MY', 'ACCESS', 'TOKEN'];
         $expirationAccessToken = 100;
         $refreshToken = 'MY_REFRESH_TOKEN';
         $expirationRefreshToken = 2000;
-
-        $domain = 'localhost';
 
         $response = $this->createMock(ResponseInterface::class);
         $response
@@ -29,29 +27,26 @@ class CookiesResponseTypeTest extends TestCase
             ->withConsecutive(
                 [
                     'Set-Cookie',
-                    'access_token-payload=' . $accessTokenExploded[0] . '.' . $accessTokenExploded[1]
-                    . '; domain=' . $domain
+                    '__Secure-access_token-payload=' . $accessTokenExploded[0] . '.' . $accessTokenExploded[1]
                     . '; path=/; expires=' . gmdate('D, d-M-Y H:i:s e', $expirationAccessToken)
-                    . '; HostOnly; SameSite=Lax'
+                    . '; Secure; HostOnly; SameSite=Lax'
                 ],
                 [
                     'Set-Cookie',
-                    'access_token-signature=' . $accessTokenExploded[2]
-                    . '; domain=' . $domain
+                    '__Secure-access_token-signature=' . $accessTokenExploded[2]
                     . '; path=/; expires=' . gmdate('D, d-M-Y H:i:s e', $expirationAccessToken)
-                    . '; HostOnly; HttpOnly; SameSite=Lax'
+                    . '; Secure; HostOnly; HttpOnly; SameSite=Lax'
                 ],
                 [
-                        'Set-Cookie',
-                        'refresh_token=' . $refreshToken
-                        . '; domain=' . $domain
-                        . '; path=/; expires=' . gmdate('D, d-M-Y H:i:s e', $expirationRefreshToken)
-                        . '; HostOnly; HttpOnly; SameSite=Lax'
+                    'Set-Cookie',
+                    '__Secure-refresh_token=' . $refreshToken
+                    . '; path=/; expires=' . gmdate('D, d-M-Y H:i:s e', $expirationRefreshToken)
+                    . '; Secure; HostOnly; HttpOnly; SameSite=Lax'
                 ]
             )
             ->willReturn($response);
 
-        (new CookiesResponseType('localhost', false))->completeResponse(
+        (new CookiesResponseType(null))->completeResponse(
             $response,
             $accessToken,
             $expirationAccessToken,

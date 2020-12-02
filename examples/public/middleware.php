@@ -14,6 +14,7 @@ use T0mmy742\TokenAPI\Crypt\SodiumCrypt;
 use T0mmy742\TokenAPI\Middleware\AuthorizationServerMiddleware;
 use T0mmy742\TokenAPI\Middleware\ResourceServerMiddleware;
 use T0mmy742\TokenAPI\ResourceServer;
+use T0mmy742\TokenAPI\TokenGeneration\ResponseType\BearerResponseType;
 use T0mmy742\TokenAPI\TokenGeneration\TokenGeneration;
 use T0mmy742\TokenAPIExamples\Repositories\AccessTokenRepository;
 use T0mmy742\TokenAPIExamples\Repositories\RefreshTokenRepository;
@@ -28,6 +29,7 @@ $container->set(AuthorizationServer::class, function () {
         new AccessTokenRepository(),
         new RefreshTokenRepository(),
         new UserRepository(),
+        new BearerResponseType(),
         new SodiumCrypt('PATH_TO_KEYFILE_PREVIOUSLY_GENERATED'),
         new DateInterval('PT1H'),
         new DateInterval('P1M'),
